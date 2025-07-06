@@ -67,14 +67,12 @@ impl GitHubService {
                         children: Some(children),
                     });
                 } else {
-                    if let Some(note_content) = self.get_note_content(&item.path).await? {
-                        notes.push(Note {
-                            id,
-                            name,
-                            content: Some(note_content),
-                            children: None,
-                        });
-                    }
+                    notes.push(Note {
+                        id,
+                        name,
+                        content: None,
+                        children: None,
+                    });
                 }
             }
             Ok(notes)
