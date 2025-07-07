@@ -1,26 +1,27 @@
+use anyhow::{Context, Result};
+use async_recursion::async_recursion;
+use futures::future::join_all;
+use octocrab::models::repos::Content;
 use octocrab::Octocrab;
 use serde::{Deserialize, Serialize};
-use std::future::Future;
-use std::pin::Pin;
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum GitHubServiceError {
-    #[allow(dead_code)]
-    OctocrabError(octocrab::Error),
+    #[error("Note already exists")]
     NoteAlreadyExists,
+    #[error("GitHub API error: {0}")]
+    Octocrab(#[from] octocrab::Error),
+    #[error("An internal error occurred: {0}")]
+    Anyhow(#[from] anyhow::Error),
 }
 
-impl From<octocrab::Error> for GitHubServiceError {
-    fn from(err: octocrab::Error) -> Self {
-        GitHubServiceError::OctocrabError(err)
-    }
-}
-
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Note {
     pub id: String,
     pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub content: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub children: Option<Vec<Note>>,
 }
 
@@ -34,218 +35,124 @@ pub struct GitHubService {
 impl GitHubService {
     pub fn new(token: String, repo_owner: String, repo_name: String, app_identifier: String) -> Self {
         let client = Octocrab::builder().personal_token(token).build().unwrap();
-        Self { client, repo_owner, repo_name, app_identifier }
+        Self {
+            client,
+            repo_owner,
+            repo_name,
+            app_identifier,
+        }
     }
 
-    pub async fn get_all_notes(&self) -> octocrab::Result<Vec<Note>> {
+    pub async fn get_all_notes(&self) -> Result<Vec<Note>> {
         self.get_notes_recursive("notes/").await
     }
 
-    fn get_notes_recursive<'a>(
-        &'a self,
-        path: &'a str,
-    ) -> Pin<Box<dyn Future<Output = octocrab::Result<Vec<Note>>> + Send + 'a>> {
-        Box::pin(async move {
-            let content_items = self.client
-                .repos(&self.repo_owner, &self.repo_name)
-                .get_content()
-                .path(path)
-                .send()
-                .await?;
-
-            let mut notes = Vec::new();
-            for item in content_items.items {
-                let name = item.name.clone();
-                let id = item.path.clone();
-
-                if item.r#type == "dir" {
-                    let children = self.get_notes_recursive(&item.path).await?;
-                    notes.push(Note {
-                        id,
-                        name,
-                        content: None,
-                        children: Some(children),
-                    });
-                } else {
-                    notes.push(Note {
-                        id,
-                        name,
-                        content: None,
-                        children: None,
-                    });
-                }
-            }
-            Ok(notes)
-        })
+    #[async_recursion]
+    async fn get_notes_recursive(&self, path: &str) -> Result<Vec<Note>> {
+        let content_items = self.get_content_items(path).await?;
+        let futures = content_items.into_iter().map(|item| self.process_content_item(item));
+        let notes = join_all(futures).await.into_iter().filter_map(Result::ok).collect();
+        Ok(notes)
     }
 
-    pub async fn get_note(&self, id: &str) -> octocrab::Result<Option<Note>> {
+    async fn process_content_item(&self, item: Content) -> Result<Note> {
+        let id = item.path.clone();
+        let name = item.name.clone();
+
+        if item.r#type == "dir" {
+            let children = self.get_notes_recursive(&item.path).await?;
+            Ok(Note { id, name, content: None, children: Some(children) })
+        } else {
+            Ok(Note { id, name, content: None, children: None })
+        }
+    }
+
+    pub async fn get_note(&self, id: &str) -> Result<Option<Note>> {
         let path = format!("notes/{}", id);
-        let result = self.client
-            .repos(&self.repo_owner, &self.repo_name)
-            .get_content()
-            .path(&path)
-            .send()
-            .await;
-
-        match result {
+        match self.get_content_items(&path).await {
             Ok(content) => {
-                if let Some(item) = content.items.into_iter().next() {
-                    let name = item.name.clone();
-                    let id = item.path.clone();
-
-                    if item.r#type == "dir" {
+                if let Some(item) = content.into_iter().next() {
+                    let note = if item.r#type == "dir" {
                         let children = self.get_notes_recursive(&item.path).await?;
-                        Ok(Some(Note {
-                            id,
-                            name,
-                            content: None,
-                            children: Some(children),
-                        }))
+                        Note { id: item.path, name: item.name, content: None, children: Some(children) }
                     } else {
-                        let note_content = self.get_note_content(&item.path).await?;
-                        Ok(Some(Note {
-                            id,
-                            name,
-                            content: note_content,
-                            children: None,
-                        }))
+                        let content = self.get_note_content(&item.path).await?;
+                        Note { id: item.path, name: item.name, content, children: None }
+                    };
+                    Ok(Some(note))
+                } else {
+                    Ok(None)
+                }
+            }
+            Err(e) => {
+                if let Some(octocrab::Error::GitHub { source, .. }) = e.downcast_ref::<octocrab::Error>() {
+                    if source.status_code == 404 {
+                        return Ok(None);
                     }
-                } else {
-                    Ok(None)
                 }
-            },
-            Err(octocrab::Error::GitHub { source, .. }) if source.status_code == 404 => {
-                Ok(None)
+                Err(e)
             }
-            Err(e) => Err(e),
         }
     }
 
-    async fn get_note_content(&self, path: &str) -> octocrab::Result<Option<String>> {
-        let result = self.client
-            .repos(&self.repo_owner, &self.repo_name)
-            .get_content()
-            .path(path)
-            .send()
-            .await;
-
-        match result {
-            Ok(content) => {
-                if let Some(item) = content.items.into_iter().next() {
-                    Ok(item.decoded_content())
-                } else {
-                    Ok(None)
+    async fn get_note_content(&self, path: &str) -> Result<Option<String>> {
+        match self.get_content_items(path).await {
+            Ok(content) => Ok(content.into_iter().next().and_then(|item| item.decoded_content())),
+            Err(e) => {
+                if let Some(octocrab::Error::GitHub { source, .. }) = e.downcast_ref::<octocrab::Error>() {
+                    if source.status_code == 404 {
+                        return Ok(None);
+                    }
                 }
-            },
-            Err(octocrab::Error::GitHub { source, .. }) if source.status_code == 404 => {
-                Ok(None)
+                Err(e)
             }
-            Err(e) => Err(e),
         }
     }
 
-pub async fn create_note(&self, path: &str, content: &str) -> Result<(), GitHubServiceError> {
-    let full_path = format!("notes/{}", path);
-    let path_obj = std::path::Path::new(path);
+    pub async fn create_note(&self, path: &str, content: &str) -> Result<(), GitHubServiceError> {
+        let full_path = format!("notes/{}", path);
+        if self.note_exists(&full_path).await? {
+            return Err(GitHubServiceError::NoteAlreadyExists);
+        }
 
-    // Check if the file already exists
-    match self.client
-        .repos(&self.repo_owner, &self.repo_name)
-        .get_content()
-        .path(&full_path)
-        .send()
-        .await {
-        Ok(_) => return Err(GitHubServiceError::NoteAlreadyExists),
-        Err(octocrab::Error::GitHub { source, .. }) if source.status_code == 404 => { /* File does not exist, proceed */ },
-        Err(e) => return Err(e.into()),
+        self.ensure_parent_directories_exist(path, content).await?;
+        
+        let is_readme = path.ends_with("README.md");
+        if !is_readme {
+            let commit_message = format!("feat: create new note by {}", self.app_identifier);
+            self.create_file(&full_path, &commit_message, content).await?;
+        }
+
+        Ok(())
     }
 
-    // A flag to check if the loop created our target file.
-    let mut target_file_was_created_in_loop = false;
-
-    if let Some(parent_path) = path_obj.parent() {
-        if !parent_path.as_os_str().is_empty() {
+    async fn ensure_parent_directories_exist(&self, path: &str, content: &str) -> Result<(), GitHubServiceError> {
+        let path_obj = std::path::Path::new(path);
+        if let Some(parent_path) = path_obj.parent() {
             let mut cumulative_path = std::path::PathBuf::from("notes");
             for component in parent_path.iter() {
                 cumulative_path.push(component);
                 let readme_path = cumulative_path.join("README.md");
                 let readme_path_str = readme_path.to_str().unwrap();
 
-                // Check if the README we are about to create is our actual target file
-                if readme_path_str == full_path {
-                    target_file_was_created_in_loop = true;
-                }
-                
-                let result = self.client
-                    .repos(&self.repo_owner, &self.repo_name)
-                    .get_content()
-                    .path(readme_path_str)
-                    .send()
-                    .await;
-
-                match result {
-                    Ok(_) => { /* README.md exists, do nothing */ },
-                    Err(octocrab::Error::GitHub { source, .. }) if source.status_code == 404 => {
-                        // README.md does not exist, create it
-                        let dir_name = component.to_str().unwrap().replace("-", " ");
-                        
-                        // If this README is our target file, use the user-provided content.
-                        // Otherwise, use the generated title.
-                        let readme_content = if target_file_was_created_in_loop {
-                            content
-                        } else {
-                            &format!("# {}", dir_name)
-                        };
-
-                        let commit_message = format!("feat: create category README by {}", self.app_identifier);
-                        let result = self.client
-                            .repos(&self.repo_owner, &self.repo_name)
-                            .create_file(readme_path_str, &commit_message, readme_content)
-                            .send()
-                            .await;
-
-                        if let Err(e) = result {
-                            // Ignore 422 in case of a race condition, but fail on other errors.
-                            if let octocrab::Error::GitHub { source, .. } = &e {
-                                if source.status_code != 422 {
-                                    return Err(e.into());
-                                }
-                            } else {
-                                return Err(e.into());
-                            }
-                        }
-                    },
-                    Err(e) => return Err(e.into()),
+                if !self.note_exists(readme_path_str).await? {
+                    let dir_name = component.to_str().unwrap().replace('-', " ");
+                    let readme_content = if readme_path_str == format!("notes/{}", path) {
+                        content.to_string()
+                    } else {
+                        format!("# {}", dir_name)
+                    };
+                    let commit_message = format!("feat: create category README by {}", self.app_identifier);
+                    self.create_file(readme_path_str, &commit_message, &readme_content).await?;
                 }
             }
         }
+        Ok(())
     }
 
-    // Only create the file if it wasn't already created by the directory loop.
-    if !target_file_was_created_in_loop {
-        let commit_message = format!("feat: create new note by {}", self.app_identifier);
-        self.client
-            .repos(&self.repo_owner, &self.repo_name)
-            .create_file(&full_path, &commit_message, content)
-            .send()
-            .await?;
-    }
-
-    Ok(())
-}
-
-    pub async fn update_note(&self, id: &str, content: &str) -> octocrab::Result<()> {
+    pub async fn update_note(&self, id: &str, content: &str) -> Result<()> {
         let path = format!("notes/{}", id);
-        let get_content_result = self.client
-            .repos(&self.repo_owner, &self.repo_name)
-            .get_content()
-            .path(&path)
-            .send()
-            .await?;
-
-        let sha = get_content_result.items.first().unwrap().sha.clone();
-
+        let sha = self.get_sha(&path).await?;
         let commit_message = format!("feat: update note by {}", self.app_identifier);
         self.client
             .repos(&self.repo_owner, &self.repo_name)
@@ -255,17 +162,9 @@ pub async fn create_note(&self, path: &str, content: &str) -> Result<(), GitHubS
         Ok(())
     }
 
-    pub async fn delete_note(&self, id: &str) -> octocrab::Result<()> {
+    pub async fn delete_note(&self, id: &str) -> Result<()> {
         let path = format!("notes/{}", id);
-        let get_content_result = self.client
-            .repos(&self.repo_owner, &self.repo_name)
-            .get_content()
-            .path(&path)
-            .send()
-            .await?;
-
-        let sha = get_content_result.items.first().unwrap().sha.clone();
-
+        let sha = self.get_sha(&path).await?;
         let commit_message = format!("feat: delete note by {}", self.app_identifier);
         self.client
             .repos(&self.repo_owner, &self.repo_name)
@@ -273,5 +172,37 @@ pub async fn create_note(&self, path: &str, content: &str) -> Result<(), GitHubS
             .send()
             .await?;
         Ok(())
+    }
+
+    async fn get_content_items(&self, path: &str) -> Result<Vec<Content>> {
+        Ok(self.client
+            .repos(&self.repo_owner, &self.repo_name)
+            .get_content()
+            .path(path)
+            .send()
+            .await?
+            .items)
+    }
+
+    async fn note_exists(&self, path: &str) -> Result<bool> {
+        match self.client.repos(&self.repo_owner, &self.repo_name).get_content().path(path).send().await {
+            Ok(_) => Ok(true),
+            Err(octocrab::Error::GitHub { source, .. }) if source.status_code == 404 => Ok(false),
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    async fn create_file(&self, path: &str, message: &str, content: &str) -> Result<(), GitHubServiceError> {
+        match self.client.repos(&self.repo_owner, &self.repo_name).create_file(path, message, content).send().await {
+            Ok(_) => Ok(()),
+            Err(octocrab::Error::GitHub { source, .. }) if source.status_code == 422 => Ok(()), // Race condition
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    async fn get_sha(&self, path: &str) -> Result<String> {
+        let content = self.get_content_items(path).await?;
+        let sha = content.first().context("No content found")?.sha.clone();
+        Ok(sha)
     }
 }
