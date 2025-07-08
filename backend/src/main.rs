@@ -16,7 +16,7 @@ use github_service::{GitHubService, GitHubServiceError, Note};
 use rust_embed::Embed;
 
 #[derive(Embed)]
-#[folder = "../note_app_frontend/build/"]
+#[folder = "../frontend/build/"]
 struct Assets;
 
 struct AppState {
