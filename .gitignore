@@ -56,3 +56,6 @@ ehthumbs.db
 Desktop.ini
 *.bak
 *.tmp
+
+# Rust Analyzer target directory
+/target/
