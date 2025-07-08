@@ -1,1 +1,58 @@
-/target
+# General
+.DS_Store
+
+# Environment variables
+# These should not be committed to version control.
+/backend/.env
+/backend/.env.local
+/backend/.env.development.local
+/backend/.env.test.local
+/backend/.env.production.local
+/frontend/.env
+/frontend/.env.local
+/frontend/.env.development.local
+/frontend/.env.test.local
+/frontend/.env.production.local
+
+# Frontend (Node / React)
+/frontend/node_modules/
+/frontend/build/
+/frontend/dist/
+/frontend/.next/
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+/frontend/coverage/
+
+# Backend (Rust)
+/backend/target/
+
+# Logs
+logs/
+*.log
+debug.log
+error.log
+
+# Test output
+/reports
+/test-results
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# Miscellaneous
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.bak
+*.tmp
