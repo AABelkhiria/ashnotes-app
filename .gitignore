@@ -1,41 +1,28 @@
 # General
 .DS_Store
+*.log
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pids
+*.pid
+*.seed
+*.pid.lock
 
-# Environment variables
-# These should not be committed to version control.
-/backend/.env
-/backend/.env.local
-/backend/.env.development.local
-/backend/.env.test.local
-/backend/.env.production.local
-/frontend/.env
-/frontend/.env.local
-/frontend/.env.development.local
-/frontend/.env.test.local
-/frontend/.env.production.local
-
-# Frontend (Node / React)
-/frontend/node_modules/
-/frontend/build/
-/frontend/dist/
-/frontend/.next/
-/frontend/npm-debug.log*
-/frontend/yarn-debug.log*
-/frontend/yarn-error.log*
-/frontend/coverage/
+# Environment Variables
+.env
+.env.*
+!/.env.example
 
 # Backend (Rust)
 /backend/target/
+/target/
 
-# Logs
-logs/
-*.log
-debug.log
-error.log
-
-# Test output
-/reports
-/test-results
+# Frontend (SvelteKit)
+/frontend/node_modules/
+/frontend/build/
+/frontend/.svelte-kit/
 
 # Editor directories and files
 .idea/
@@ -56,6 +43,3 @@ ehthumbs.db
 Desktop.ini
 *.bak
 *.tmp
-
-# Rust Analyzer target directory
-/target/
