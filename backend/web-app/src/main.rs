@@ -10,13 +10,12 @@ use serde::Deserialize;
 use std::sync::Arc;
 use tower_http::cors::{Any, CorsLayer};
 
-mod github_service;
-use github_service::{GitHubService, GitHubServiceError, Note};
+use services::github_service::{GitHubService, GitHubServiceError, Note};
 
 use rust_embed::Embed;
 
 #[derive(Embed)]
-#[folder = "../frontend/build/"]
+#[folder = "../../frontend/build/"]
 struct Assets;
 
 struct AppState {

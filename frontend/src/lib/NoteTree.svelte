@@ -4,6 +4,8 @@
 	import NoteTreeItem from './NoteTreeItem.svelte';
 	import Icon from './Icon.svelte';
 
+	import { listNotes, createNote } from './api';
+
 	interface NoteItem {
 		name: string;
 		path: string;
@@ -23,24 +25,7 @@
 		const newNoteContent = `# ${newNoteName}`;
 
 		try {
-			const response = await fetch(`/api/notes`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ path: newNotePath, content: newNoteContent })
-			});
-
-			if (!response.ok) {
-				if (response.status === 500) {
-					triggerRefresh();
-					return;
-				}
-				if (response.status === 409) {
-					throw new Error(`A note with the name "${newNoteName}" already exists at the root.`);
-				}
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
+			await createNote(newNotePath, newNoteContent);
 			triggerRefresh();
 		} catch (error) {
 			console.error('Failed to create root note:', error);
@@ -76,11 +61,7 @@
 		loading = true;
 		errorMessage = null;
 		try {
-			const response = await fetch(`/api/notes`);
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-			const rawNotes = await response.json();
+			const rawNotes = await listNotes();
 			notes = processNotes(rawNotes);
 		} catch (error: any) {
 			errorMessage = `Failed to fetch or process notes: ${error.message}`;

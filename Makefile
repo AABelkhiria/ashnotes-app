@@ -1,6 +1,6 @@
 # Makefile for the Note App project
 
-.DEFAULT_GOAL := help
+.DEFAULT_GOAL := build
 
 # ==============================================================================
 # Variables
@@ -14,98 +14,77 @@ BACKEND_DIR := backend
 # ==============================================================================
 
 .PHONY: all
-all: build ## Build both the frontend and backend
+all: build ## Build all applications
 
 .PHONY: build
-build: build-frontend build-backend ## Build both the frontend and backend for production
-
-.PHONY: run
-run: run-backend-bg run-frontend ## Run both the frontend and backend development servers concurrently
+build: build-web build-desktop ## Build both web and desktop applications
 
 .PHONY: install
-install: frontend/install ## Install frontend dependencies
-
-.PHONY: check
-check: frontend/check ## Run static checks on the frontend code
-
-.PHONY: test
-test: backend/test ## Run tests for the backend
-
-.PHONY: clean
-clean: frontend/clean backend/clean ## Clean the build artifacts for both frontend and backend
+install: ## Install frontend dependencies
+	@echo "Installing frontend dependencies..."
+	npm install
 
 # ==============================================================================
-# Frontend Targets
+# Web Application Targets
 # ==============================================================================
+
+.PHONY: build-web
+build-web: build-frontend build-web-server ## Build the complete web application
+
+.PHONY: run-web
+run-web: run-web-server-bg run-frontend ## Run the web application
 
 .PHONY: build-frontend
 build-frontend:
-	@echo "Building frontend..."
-	@$(MAKE) frontend/build
-
-.PHONY: run-frontend
-run-frontend:
-	@echo "Starting frontend development server..."
-	@$(MAKE) frontend/dev
-
-.PHONY: frontend/install
-frontend/install:
-	@echo "Installing frontend dependencies..."
-	cd $(FRONTEND_DIR) && npm install
-
-.PHONY: frontend/dev
-frontend/dev:
-	cd $(FRONTEND_DIR) && npm run dev
-
-.PHONY: frontend/build
-frontend/build:
+	@echo "Building frontend for web..."
 	cd $(FRONTEND_DIR) && npm run build
 
-.PHONY: frontend/check
-frontend/check:
-	@echo "Running checks on frontend..."
-	cd $(FRONTEND_DIR) && npm run check
+.PHONY: run-frontend
+	@echo "Starting frontend development server..."
+	cd $(FRONTEND_DIR) && npm run dev
 
-.PHONY: frontend/clean
-frontend/clean:
-	@echo "Cleaning frontend artifacts..."
-	cd $(FRONTEND_DIR) && rm -rf build .svelte-kit node_modules
+.PHONY: build-web-server
+build-web-server:
+	@echo "Building web server..."
+	cd $(BACKEND_DIR) && cargo build --release -p web-app
+
+.PHONY: run-web-server
+run-web-server:
+	@echo "Starting web server..."
+	cd $(BACKEND_DIR) && cargo run -p web-app
+
+.PHONY: run-web-server-bg
+run-web-server-bg:
+	@echo "Starting web server in the background..."
+	cd $(BACKEND_DIR) && cargo run -p web-app &
 
 # ==============================================================================
-# Backend Targets
+# Desktop Application Targets
 # ==============================================================================
 
-.PHONY: build-backend
-build-backend:
-	@echo "Building backend..."
-	@$(MAKE) backend/build
+.PHONY: build-desktop
+build-desktop: ## Build the desktop application
+	@echo "Building desktop application..."
+	cd $(BACKEND_DIR)/desktop-app && cargo tauri build
 
-.PHONY: run-backend
-run-backend:
-	@echo "Starting backend development server..."
-	@$(MAKE) backend/run
+.PHONY: run-desktop
+run-desktop: ## Run the desktop application in development mode
+	@echo "Starting desktop application..."
+	cd $(BACKEND_DIR)/desktop-app && cargo tauri dev
 
-.PHONY: run-backend-bg
-run-backend-bg:
-	@echo "Starting backend development server in the background..."
-	@$(MAKE) backend/run &
+# ==============================================================================
+# Shared Targets
+# ==============================================================================
 
-.PHONY: backend/run
-backend/run:
-	cd $(BACKEND_DIR) && cargo run
-
-.PHONY: backend/build
-backend/build:
-	cd $(BACKEND_DIR) && cargo build --release
-
-.PHONY: backend/test
-backend/test:
+.PHONY: test
+test: ## Run tests for the backend
 	@echo "Running tests for backend..."
-	cd $(BACKEND_DIR) && cargo test
+	cd $(BACKEND_DIR) && cargo test --workspace
 
-.PHONY: backend/clean
-backend/clean:
-	@echo "Cleaning backend artifacts..."
+.PHONY: clean
+clean: ## Clean all build artifacts
+	@echo "Cleaning project..."
+	cd $(FRONTEND_DIR) && rm -rf build .svelte-kit node_modules
 	cd $(BACKEND_DIR) && cargo clean
 
 # ==============================================================================

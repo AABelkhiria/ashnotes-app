@@ -5,14 +5,14 @@ use octocrab::models::repos::Content;
 use octocrab::Octocrab;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, thiserror::Error, serde::Serialize)]
 pub enum GitHubServiceError {
     #[error("Note already exists")]
     NoteAlreadyExists,
     #[error("GitHub API error: {0}")]
-    Octocrab(#[from] octocrab::Error),
+    Octocrab(String),
     #[error("An internal error occurred: {0}")]
-    Anyhow(#[from] anyhow::Error),
+    Anyhow(String),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -23,6 +23,18 @@ pub struct Note {
     pub content: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub children: Option<Vec<Note>>,
+}
+
+impl From<anyhow::Error> for GitHubServiceError {
+    fn from(err: anyhow::Error) -> Self {
+        GitHubServiceError::Anyhow(err.to_string())
+    }
+}
+
+impl From<octocrab::Error> for GitHubServiceError {
+    fn from(err: octocrab::Error) -> Self {
+        GitHubServiceError::Octocrab(err.to_string())
+    }
 }
 
 pub struct GitHubService {

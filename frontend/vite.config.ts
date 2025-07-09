@@ -10,5 +10,10 @@ export default defineConfig({
 				changeOrigin: true
 			}
 		}
+	},
+	build: {
+		rollupOptions: {
+			external: ['@tauri-apps/api/tauri']
+		}
 	}
 });

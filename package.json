@@ -1,0 +1,7 @@
+{
+  "name": "ashnotes-monorepo",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ]
+}

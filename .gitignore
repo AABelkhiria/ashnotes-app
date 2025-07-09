@@ -21,6 +21,7 @@ pids
 
 # Frontend (SvelteKit)
 /frontend/node_modules/
+/node_modules/
 /frontend/build/
 /frontend/.svelte-kit/
 
