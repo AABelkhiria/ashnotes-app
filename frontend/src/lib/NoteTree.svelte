@@ -92,7 +92,7 @@
 	{:else if errorMessage}
 		<p class="error">{errorMessage}</p>
 	{:else if notes.length === 0}
-		<p>No notes found. Create your first note!</p>
+		<p>Settings are empty or invalid. Please configure your settings.</p>
 	{:else}
 		<ul>
 			{#each notes as note}

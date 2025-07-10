@@ -9,6 +9,12 @@
 FRONTEND_DIR := frontend
 BACKEND_DIR := backend
 
+WEB_APP_BINARY_NAME := web-app
+WEB_APP_COMPILED_BINARY_RELEASE := $(BACKEND_DIR)/target/release/$(WEB_APP_BINARY_NAME)
+
+DESKTOP_APP_BINARY_NAME := desktop-app
+DESKTOP_APP_COMPILED_BINARY_RELEASE := $(BACKEND_DIR)/target/release/$(DESKTOP_APP_BINARY_NAME)
+
 # ==============================================================================
 # High-Level Targets
 # ==============================================================================
@@ -29,10 +35,7 @@ install: ## Install frontend dependencies
 # ==============================================================================
 
 .PHONY: build-web
-build-web: build-frontend build-web-server ## Build the complete web application
-
-.PHONY: run-web
-run-web: run-web-server-bg run-frontend ## Run the web application
+build-web: build-frontend build-web-app ## Build the complete web application
 
 .PHONY: build-frontend
 build-frontend:
@@ -43,18 +46,25 @@ build-frontend:
 	@echo "Starting frontend development server..."
 	cd $(FRONTEND_DIR) && npm run dev
 
-.PHONY: build-web-server
-build-web-server:
+.PHONY: build-web-app
+build-web-app:
 	@echo "Building web server..."
-	cd $(BACKEND_DIR) && cargo build --release -p web-app
+	cd $(BACKEND_DIR) && cargo build --release --bin web-app
 
-.PHONY: run-web-server
-run-web-server:
+.PHONY: run-web-app
+run-web-app:
 	@echo "Starting web server..."
-	cd $(BACKEND_DIR) && cargo run -p web-app
+	@# Check if the compiled debug binary exists
+	@if [ -f "$(WEB_APP_COMPILED_BINARY_RELEASE)" ]; then \
+		echo "--> Found compiled binary, running it directly."; \
+		$(WEB_APP_COMPILED_BINARY_RELEASE); \
+	else \
+		echo "--> No compiled binary found, using 'cargo run' (will compile first)..."; \
+		cd $(BACKEND_DIR) && cargo run --bin $(BINARY_NAME); \
+	fi
 
-.PHONY: run-web-server-bg
-run-web-server-bg:
+.PHONY: run-web-app-bg
+run-web-app-bg:
 	@echo "Starting web server in the background..."
 	cd $(BACKEND_DIR) && cargo run -p web-app &
 
@@ -65,12 +75,19 @@ run-web-server-bg:
 .PHONY: build-desktop
 build-desktop: ## Build the desktop application
 	@echo "Building desktop application..."
-	cd $(BACKEND_DIR)/desktop-app && cargo tauri build
+	cd $(BACKEND_DIR) && cargo tauri build
 
 .PHONY: run-desktop
 run-desktop: ## Run the desktop application in development mode
 	@echo "Starting desktop application..."
-	cd $(BACKEND_DIR)/desktop-app && cargo tauri dev
+	@# Check if the compiled debug binary exists
+	@if [ -f "$(DESKTOP_APP_COMPILED_BINARY_RELEASE)" ]; then \
+		echo "--> Found compiled binary, running it directly."; \
+		$(DESKTOP_APP_COMPILED_BINARY_RELEASE); \
+	else \
+		echo "--> No compiled binary found, using 'cargo run' (will compile first)..."; \
+		cd $(BACKEND_DIR) && cargo tauri dev; \
+	fi
 
 # ==============================================================================
 # Shared Targets

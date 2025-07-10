@@ -1,8 +1,9 @@
 use axum::{
+    extract::{Path, FromRequestParts},
+    async_trait,
     Json, Router,
     body::Body,
-    extract::{Path, State},
-    http::{StatusCode, Uri, header},
+    http::{request::Parts, StatusCode, Uri, header},
     response::{IntoResponse, Response},
     routing::get,
 };
@@ -18,20 +19,13 @@ use rust_embed::Embed;
 #[folder = "../../frontend/build/"]
 struct Assets;
 
-struct AppState {
-    github_service: GitHubService,
-}
+struct AppState;
 
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().ok();
-    let github_token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN must be set");
-    let notes_repo_owner = std::env::var("NOTES_REPO_OWNER").expect("NOTES_REPO_OWNER must be set");
-    let notes_repo_name = std::env::var("NOTES_REPO_NAME").expect("NOTES_REPO_NAME must be set");
-    let app_identifier = std::env::var("APP_IDENTIFIER").unwrap_or_else(|_| "NoteApp".to_string());
 
-    let github_service = GitHubService::new(github_token, notes_repo_owner, notes_repo_name, app_identifier);
-    let shared_state = Arc::new(AppState { github_service });
+    let shared_state = Arc::new(AppState);
 
     let cors = CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any);
 
@@ -80,9 +74,61 @@ async fn static_handler(uri: Uri) -> impl IntoResponse {
     }
 }
 
-async fn list_notes(State(state): State<Arc<AppState>>) -> Result<Json<Vec<Note>>, impl IntoResponse> {
-    state
-        .github_service
+struct ApiHeaders {
+    github_token: String,
+    notes_repo: String,
+    app_identifier: String,
+}
+
+#[async_trait]
+impl<S> FromRequestParts<S> for ApiHeaders
+where
+    S: Send + Sync,
+{
+    type Rejection = (StatusCode, String);
+
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+        let github_token = parts
+            .headers
+            .get("GITHUB_TOKEN")
+            .and_then(|v| v.to_str().ok())
+            .map(|s| s.to_string())
+            .ok_or_else(|| (StatusCode::BAD_REQUEST, "GITHUB_TOKEN header is missing".to_string()))?;
+
+        let notes_repo = parts
+            .headers
+            .get("NOTES_REPO")
+            .and_then(|v| v.to_str().ok())
+            .map(|s| s.to_string())
+            .ok_or_else(|| (StatusCode::BAD_REQUEST, "NOTES_REPO header is missing".to_string()))?;
+
+        let app_identifier = parts
+            .headers
+            .get("APP_IDENTIFIER")
+            .and_then(|v| v.to_str().ok())
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| "NoteApp".to_string());
+
+        Ok(ApiHeaders {
+            github_token,
+            notes_repo,
+            app_identifier,
+        })
+    }
+}
+
+fn get_github_service(headers: &ApiHeaders) -> GitHubService {
+    let repo_parts: Vec<&str> = headers.notes_repo.split('/').collect();
+    let owner = repo_parts.first().unwrap_or(&"").to_string();
+    let name = repo_parts.get(1).unwrap_or(&"").to_string();
+    GitHubService::new(headers.github_token.clone(), owner, name, headers.app_identifier.clone())
+}
+
+async fn list_notes(
+    headers: ApiHeaders,
+) -> Result<Json<Vec<Note>>, impl IntoResponse> {
+    let github_service = get_github_service(&headers);
+    github_service
         .get_all_notes()
         .await
         .map(Json)
@@ -90,10 +136,11 @@ async fn list_notes(State(state): State<Arc<AppState>>) -> Result<Json<Vec<Note>
 }
 
 async fn get_note(
-    State(state): State<Arc<AppState>>,
+    headers: ApiHeaders,
     Path(path): Path<String>,
 ) -> Result<Json<Note>, impl IntoResponse> {
-    match state.github_service.get_note(&path).await {
+    let github_service = get_github_service(&headers);
+    match github_service.get_note(&path).await {
         Ok(Some(note)) => Ok(Json(note)),
         Ok(None) => Err((StatusCode::NOT_FOUND, "Note not found".to_string())),
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
@@ -106,8 +153,12 @@ struct CreateNote {
     content: String,
 }
 
-async fn create_note(State(state): State<Arc<AppState>>, Json(payload): Json<CreateNote>) -> impl IntoResponse {
-    match state.github_service.create_note(&payload.path, &payload.content).await {
+async fn create_note(
+    headers: ApiHeaders,
+    Json(payload): Json<CreateNote>,
+) -> impl IntoResponse {
+    let github_service = get_github_service(&headers);
+    match github_service.create_note(&payload.path, &payload.content).await {
         Ok(_) => (StatusCode::CREATED, "Note created".to_string()),
         Err(GitHubServiceError::NoteAlreadyExists) => {
             (StatusCode::CONFLICT, "Note with this path already exists".to_string())
@@ -122,18 +173,23 @@ struct UpdateNote {
 }
 
 async fn update_note(
-    State(state): State<Arc<AppState>>,
+    headers: ApiHeaders,
     Path(path): Path<String>,
     Json(payload): Json<UpdateNote>,
 ) -> impl IntoResponse {
-    match state.github_service.update_note(&path, &payload.content).await {
+    let github_service = get_github_service(&headers);
+    match github_service.update_note(&path, &payload.content).await {
         Ok(_) => (StatusCode::OK, "Note updated".to_string()),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
     }
 }
 
-async fn delete_note(State(state): State<Arc<AppState>>, Path(path): Path<String>) -> impl IntoResponse {
-    match state.github_service.delete_note(&path).await {
+async fn delete_note(
+    headers: ApiHeaders,
+    Path(path): Path<String>,
+) -> impl IntoResponse {
+    let github_service = get_github_service(&headers);
+    match github_service.delete_note(&path).await {
         Ok(_) => (StatusCode::OK, "Note deleted".to_string()),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
     }

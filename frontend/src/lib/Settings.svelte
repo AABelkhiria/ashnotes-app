@@ -1,17 +1,29 @@
 <script lang="ts">
 	import { theme, toggleTheme } from './themeStore';
-	import { backendUrl } from './noteStore';
+	import { githubToken, noteRepo, appIdentifier } from './settingsStore';
 	import Icon from './Icon.svelte';
 
 	let showSettings = false;
-	let urlInput = '';
+	let githubTokenInput = '';
+	let noteRepoInput = '';
+	let appIdentifierInput = '';
 
-	backendUrl.subscribe((value) => {
-		urlInput = value;
+	githubToken.subscribe((value) => {
+		githubTokenInput = value;
+	});
+
+	noteRepo.subscribe((value) => {
+		noteRepoInput = value;
+	});
+
+	appIdentifier.subscribe((value) => {
+		appIdentifierInput = value;
 	});
 
 	function saveSettings() {
-		backendUrl.set(urlInput);
+		githubToken.set(githubTokenInput);
+		noteRepo.set(noteRepoInput);
+		appIdentifier.set(appIdentifierInput);
 		showSettings = false;
 	}
 </script>
@@ -32,8 +44,16 @@
 		<div class="modal">
 			<h2>Settings</h2>
 			<div class="setting">
-				<label for="backendUrl">Backend URL</label>
-				<input type="text" id="backendUrl" bind:value={urlInput} />
+				<label for="githubToken">GitHub Token</label>
+				<input type="password" id="githubToken" bind:value={githubTokenInput} />
+			</div>
+			<div class="setting">
+				<label for="noteRepo">Note Repository</label>
+				<input type="text" id="noteRepo" bind:value={noteRepoInput} />
+			</div>
+			<div class="setting">
+				<label for="appIdentifier">App Identifier</label>
+				<input type="text" id="appIdentifier" bind:value={appIdentifierInput} />
 			</div>
 			<div class="setting">
 				<label for="darkMode">Dark Mode</label>

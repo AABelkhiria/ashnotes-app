@@ -1,65 +1,106 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::sync::Arc;
-use tauri::Manager;
+use std::sync::{Arc, Mutex};
 use services::github_service::{GitHubService, GitHubServiceError, Note};
 
 struct AppState {
-    github_service: Arc<GitHubService>,
+    github_service: Arc<Mutex<Option<Arc<GitHubService>>>>,
+}
+
+#[tauri::command]
+fn set_credentials(
+    state: tauri::State<'_, AppState>,
+    github_token: String,
+    notes_repo: String,
+    app_identifier: String,
+) -> Result<(), String> {
+    let mut service_guard = state.github_service.lock().unwrap();
+    let repo_parts: Vec<&str> = notes_repo.split('/').collect();
+    if repo_parts.len() != 2 {
+        return Err("Invalid NOTES_REPO format. Expected 'owner/name'".to_string());
+    }
+    let owner = repo_parts[0].to_string();
+    let name = repo_parts[1].to_string();
+
+    let new_service = Arc::new(GitHubService::new(github_token, owner, name, app_identifier));
+    *service_guard = Some(new_service);
+    Ok(())
 }
 
 #[tauri::command]
 async fn list_notes(state: tauri::State<'_, AppState>) -> Result<Vec<Note>, GitHubServiceError> {
-    state.github_service.get_all_notes().await.map_err(|e| GitHubServiceError::Anyhow(e.to_string()))
+    let service = {
+        let guard = state.github_service.lock().unwrap();
+        guard.as_ref().cloned()
+    };
+    if let Some(service) = service {
+        service.get_all_notes().await.map_err(|e| GitHubServiceError::Anyhow(e.to_string()))
+    } else {
+        Err(GitHubServiceError::Anyhow("GitHub service not initialized".to_string()))
+    }
 }
 
 #[tauri::command]
 async fn get_note(state: tauri::State<'_, AppState>, path: String) -> Result<Option<Note>, GitHubServiceError> {
-    state.github_service.get_note(&path).await.map_err(|e| GitHubServiceError::Anyhow(e.to_string()))
+    let service = {
+        let guard = state.github_service.lock().unwrap();
+        guard.as_ref().cloned()
+    };
+    if let Some(service) = service {
+        service.get_note(&path).await.map_err(|e| GitHubServiceError::Anyhow(e.to_string()))
+    } else {
+        Err(GitHubServiceError::Anyhow("GitHub service not initialized".to_string()))
+    }
 }
 
 #[tauri::command]
 async fn create_note(state: tauri::State<'_, AppState>, path: String, content: String) -> Result<(), GitHubServiceError> {
-    state.github_service.create_note(&path, &content).await
+    let service = {
+        let guard = state.github_service.lock().unwrap();
+        guard.as_ref().cloned()
+    };
+    if let Some(service) = service {
+        service.create_note(&path, &content).await
+    } else {
+        Err(GitHubServiceError::Anyhow("GitHub service not initialized".to_string()))
+    }
 }
 
 #[tauri::command]
 async fn update_note(state: tauri::State<'_, AppState>, path: String, content: String) -> Result<(), GitHubServiceError> {
-    state.github_service.update_note(&path, &content).await.map_err(|e| GitHubServiceError::Anyhow(e.to_string()))
+    let service = {
+        let guard = state.github_service.lock().unwrap();
+        guard.as_ref().cloned()
+    };
+    if let Some(service) = service {
+        service.update_note(&path, &content).await.map_err(|e| GitHubServiceError::Anyhow(e.to_string()))
+    } else {
+        Err(GitHubServiceError::Anyhow("GitHub service not initialized".to_string()))
+    }
 }
 
 #[tauri::command]
 async fn delete_note(state: tauri::State<'_, AppState>, path: String) -> Result<(), GitHubServiceError> {
-    state.github_service.delete_note(&path).await.map_err(|e| GitHubServiceError::Anyhow(e.to_string()))
+    let service = {
+        let guard = state.github_service.lock().unwrap();
+        guard.as_ref().cloned()
+    };
+    if let Some(service) = service {
+        service.delete_note(&path).await.map_err(|e| GitHubServiceError::Anyhow(e.to_string()))
+    } else {
+        Err(GitHubServiceError::Anyhow("GitHub service not initialized".to_string()))
+    }
 }
 
-#[tokio::main]
-async fn main() {
-    println!("Starting desktop application...");
-    dotenvy::dotenv().ok();
-
-    // Load environment variables for the service.
-    let github_token = std::env::var("GITHUB_TOKEN").expect("GITHUB_TOKEN must be set");
-    let notes_repo_owner = std::env::var("NOTES_REPO_OWNER").expect("NOTES_REPO_OWNER must be set");
-    let notes_repo_name = std::env::var("NOTES_REPO_NAME").expect("NOTES_REPO_NAME must be set");
-    let app_identifier = std::env::var("APP_IDENTIFIER").unwrap_or_else(|_| "NoteApp".to_string());
-
-    // Initialize the service here. The Tokio runtime is now active.
-    let github_service = GitHubService::new(
-        github_token,
-        notes_repo_owner,
-        notes_repo_name,
-        app_identifier,
-    );
-
-    // Create and manage the application state.
+fn main() {
     let app_state = AppState {
-        github_service: Arc::new(github_service),
+        github_service: Arc::new(Mutex::new(None)),
     };
 
     tauri::Builder::default()
         .manage(app_state)
         .invoke_handler(tauri::generate_handler![
+            set_credentials,
             list_notes,
             get_note,
             create_note,
@@ -68,5 +109,4 @@ async fn main() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
-    println!("Tauri application started.");
 }

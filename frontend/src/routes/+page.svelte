@@ -2,6 +2,7 @@
 	import NoteEditor from '../lib/NoteEditor.svelte';
 	import { triggerRefresh } from '../lib/noteStore';
 	import { onMount } from 'svelte';
+	import { getNote, updateNote, deleteNote } from '../lib/api';
 
 	let content: string = '';
 	let notePath: string = 'README.md';
@@ -13,30 +14,17 @@
 
 	async function fetchNoteContent() {
 		try {
-			const response = await fetch(`/api/notes/${notePath}`);
-			if (response.ok) {
-				content = await response.text();
-			} else if (response.status === 404) {
-				content = '';
-			} else {
-				throw new Error(`Failed to fetch note: ${response.statusText}`);
-			}
+			const note = await getNote(notePath);
+			content = note.content || '';
 		} catch (error) {
 			console.error('Error fetching note content:', error);
-			content = '# Error loading note\n\nCould not load the note content.';
+			content = '# Error loading note\n\nCould not load the note content. Settings might be empty or invalid.';
 		}
 	}
 
 	async function handleSave(newContent: string) {
 		try {
-			const response = await fetch(`/api/notes/${notePath}`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'text/plain' },
-				body: newContent
-			});
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
+			await updateNote(notePath, newContent);
 			successMessage = 'Note saved successfully!';
 			setTimeout(() => (successMessage = null), 3000);
 			triggerRefresh();
@@ -47,23 +35,34 @@
 		}
 	}
 
-	function handleNoteDeleted() {
-		triggerRefresh();
-		content = '';
-		notePath = 'README.md';
-		successMessage = 'Note deleted successfully!';
-		setTimeout(() => (successMessage = null), 3000);
+	async function handleDelete() {
+		if (!confirm(`Are you sure you want to delete ${notePath}?`)) {
+			return;
+		}
+		try {
+			await deleteNote(notePath);
+			successMessage = 'Note deleted successfully!';
+			setTimeout(() => (successMessage = null), 3000);
+			triggerRefresh();
+			content = '';
+			notePath = 'README.md';
+			fetchNoteContent();
+		} catch (error) {
+			console.error('Error deleting note:', error);
+			successMessage = 'Failed to delete note.';
+			setTimeout(() => (successMessage = null), 3000);
+		}
 	}
 </script>
 
 <svelte:head>
-	<title>Note App</title>
+	<title>Ash Notes</title>
 </svelte:head>
 
 <NoteEditor
 	bind:content
 	{notePath}
 	onSave={handleSave}
-	onDelete={handleNoteDeleted}
+	onDelete={handleDelete}
 	{successMessage}
 />

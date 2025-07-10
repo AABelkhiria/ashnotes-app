@@ -2,8 +2,9 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import NoteEditor from '$lib/NoteEditor.svelte';
-	import { triggerRefresh, backendUrl } from '$lib/noteStore';
+	import { triggerRefresh } from '$lib/noteStore';
 	import { goto } from '$app/navigation';
+	import { getNote, createNote, updateNote, deleteNote } from '$lib/api';
 
 	let noteContent: string | null = null;
 	let notePathForSave: string = '';
@@ -29,29 +30,26 @@
 		isCreating = false;
 
 		try {
-			const response = await fetch(`${$backendUrl}/api/notes/${path}`);
-			if (response.status === 404) {
+			const note = await getNote(path);
+			noteContent = note.content ?? '';
+			// If the path doesn't contain a file extension, assume it's a directory
+			// and the content fetched is for its README.md
+			if (!path.includes('.')) {
+				notePathForSave = `${path}/README.md`;
+			} else {
+				notePathForSave = path;
+			}
+		} catch (error: any) {
+			if (error.message.includes('404') || error.message.includes('not found')) {
 				noteContent = '';
 				const parentPath = getParentPath(path);
 				notePathForSave = `${parentPath}/README.md`;
 				isCreating = true;
-			} else if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
 			} else {
-				const note = await response.json();
-				noteContent = note.content;
-				// If the path doesn't contain a file extension, assume it's a directory
-				// and the content fetched is for its README.md
-				if (!path.includes('.')) {
-					notePathForSave = `${path}/README.md`;
-				} else {
-					notePathForSave = path;
-				}
+				errorMessage = `Failed to fetch note content: ${error.message}`;
+				console.error(errorMessage);
+				noteContent = null;
 			}
-		} catch (error: any) {
-			errorMessage = `Failed to fetch note content: ${error.message}`;
-			console.error(errorMessage);
-			noteContent = null;
 		} finally {
 			loading = false;
 		}
@@ -61,25 +59,10 @@
 		errorMessage = null;
 		successMessage = null;
 		try {
-			const url = isCreating
-				? `${$backendUrl}/api/notes`
-				: `${$backendUrl}/api/notes/${notePathForSave}`;
-			const method = isCreating ? 'POST' : 'PUT';
-			const body = isCreating
-				? JSON.stringify({ path: notePathForSave, content })
-				: JSON.stringify({ content });
-
-			const response = await fetch(url, {
-				method,
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body
-			});
-
-			if (!response.ok) {
-				const errorText = await response.text();
-				throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+			if (isCreating) {
+				await createNote(notePathForSave, content);
+			} else {
+				await updateNote(notePathForSave, content);
 			}
 
 			successMessage = `Note ${isCreating ? 'created' : 'updated'} successfully!`;
@@ -101,12 +84,7 @@
 		errorMessage = null;
 		successMessage = null;
 		try {
-			const response = await fetch(`${$backendUrl}/api/notes/${notePathForSave}`, {
-				method: 'DELETE'
-			});
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
+			await deleteNote(notePathForSave);
 			successMessage = 'Note deleted successfully!';
 			triggerRefresh();
 			goto('/');
@@ -117,13 +95,9 @@
 	}
 
 	onMount(() => {
-		const unsubscribe = backendUrl.subscribe(() => {
-			if ($page.params.path) {
-				fetchNoteContent($page.params.path);
-			}
-		});
-
-		return unsubscribe;
+		if ($page.params.path) {
+			fetchNoteContent($page.params.path);
+		}
 	});
 
 	$: if (

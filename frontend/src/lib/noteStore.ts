@@ -8,24 +8,4 @@ export function triggerRefresh() {
 
 export const activeMenu = writable<string | null>(null);
 
-function createBackendUrlStore(): Writable<string> {
-	const initialUrl =
-		typeof window !== 'undefined'
-			? localStorage.getItem('backendUrl') || 'http://localhost:3000'
-			: 'http://localhost:3000';
-
-	const { subscribe, set, update } = writable<string>(initialUrl);
-
-	return {
-		subscribe,
-		set: (value: string) => {
-			if (typeof window !== 'undefined') {
-				localStorage.setItem('backendUrl', value);
-			}
-			set(value);
-		},
-		update
-	};
-}
-
-export const backendUrl = createBackendUrlStore();
+export const backendUrl = writable<string>('');

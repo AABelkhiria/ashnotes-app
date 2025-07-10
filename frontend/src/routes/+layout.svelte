@@ -6,7 +6,7 @@
 	import Settings from '$lib/Settings.svelte';
 
 	onMount(() => {
-		const savedTheme = localStorage.getItem('theme') || 'light';
+		const savedTheme = localStorage.getItem('theme') || 'dark';
 		theme.set(savedTheme);
 	});
 </script>

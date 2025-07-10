@@ -3,6 +3,7 @@
 	import { triggerRefresh, backendUrl } from './noteStore';
 	import DeletionProgress from './DeletionProgress.svelte';
 	import Icon from './Icon.svelte';
+	import { createNote } from './api';
 	export let item: NoteItem;
 	export let level: number;
 
@@ -36,30 +37,15 @@
 		const newNoteContent = `# ${newNoteName}`;
 
 		try {
-			const response = await fetch(`${backendUrl}/api/notes`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ path: newNotePath, content: newNoteContent })
-			});
-
-			if (!response.ok) {
-				if (response.status === 500) {
-					triggerRefresh();
-					return;
-				}
-				if (response.status === 409) {
-					throw new Error(
-						`A note with the name "${newNoteName}" already exists in this directory.`
-					);
-				}
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
+			await createNote(newNotePath, newNoteContent);
 			triggerRefresh();
 		} catch (error: any) {
-			console.error('Failed to create note:', error);
-			alert(`Failed to create note: ${error.message}`);
+			if (error.message.includes('409')) {
+				alert(`A note with the name "${newNoteName}" already exists in this directory.`);
+			} else {
+				console.error('Failed to create note:', error);
+				alert(`Failed to create note: ${error.message}`);
+			}
 		}
 	}
 

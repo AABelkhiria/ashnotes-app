@@ -19,6 +19,12 @@ When a new category (directory) is created, a `README.md` file is automatically 
 
 ## API Endpoints
 
+All API endpoints require the following headers:
+
+-   `GITHUB_TOKEN`: Your GitHub personal access token.
+-   `NOTES_REPO`: The owner and name of the repository for storing notes (e.g., `owner/repo`).
+-   `APP_IDENTIFIER`: An identifier for the application making the changes.
+
 ### List All Notes
 
 -   **Endpoint:** `GET /api/notes`
@@ -60,25 +66,7 @@ When a new category (directory) is created, a `README.md` file is automatically 
 
 ## Setup and Installation
 
-1.  **Build the frontend:**
-    ```bash
-    make build-frontend
-    ```
-
-2.  **Create a `.env` file in the `backend` directory:**
-
-    Copy the example file and fill in your details:
-    ```bash
-    cp .env.example .env
-    ```
-
-3.  **Set environment variables in `.env`:**
-
-    -   `GITHUB_TOKEN`: Your GitHub personal access token.
-    -   `NOTES_REPO_OWNER`: The owner of the repository for storing notes.
-    -   `NOTES_REPO_NAME`: The name of the notes repository.
-
-4.  **Run the application:**
+1.  **Run the application:**
     ```bash
     make run-backend
     ```
