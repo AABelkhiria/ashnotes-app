@@ -627,7 +627,7 @@ dependencies = [
 
 [[package]]
 name = "desktop-app"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "dotenvy",
  "serde",
@@ -3365,7 +3365,7 @@ dependencies = [
 
 [[package]]
 name = "services"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "async-recursion",
@@ -4564,7 +4564,7 @@ dependencies = [
 
 [[package]]
 name = "web-app"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "axum",
  "dotenvy",
