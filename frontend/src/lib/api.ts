@@ -70,9 +70,12 @@ export async function listNotes(): Promise<Note[]> {
 }
 
 export async function getNote(path: string): Promise<Note> {
-	if (settingsAreEmpty() || !get(isInitialized)) {
-		throw new Error('Settings are not configured.');
+	if (settingsAreEmpty()) {
+		throw new Error('Settings are not configured: GitHub token or notes repository is empty.');
 	}
+    if (!get(isInitialized)) {
+        throw new Error('Application is not initialized.');
+    }
     if (isDesktop) {
         const { invoke } = await import('@tauri-apps/api/core');
         const note = await invoke('get_note', { path });
@@ -91,8 +94,11 @@ export async function getNote(path: string): Promise<Note> {
 }
 
 export async function createNote(path: string, content: string): Promise<void> {
-	if (settingsAreEmpty() || !get(isInitialized)) {
-		throw new Error('Settings are not configured.');
+	if (settingsAreEmpty()) {
+		throw new Error('Settings are not configured: GitHub token or notes repository is empty.');
+	}
+	if (!get(isInitialized)) {
+		throw new Error('Application is not initialized.');
 	}
     if (isDesktop) {
         const { invoke } = await import('@tauri-apps/api/core');
@@ -108,8 +114,11 @@ export async function createNote(path: string, content: string): Promise<void> {
 }
 
 export async function updateNote(path: string, content: string): Promise<void> {
-	if (settingsAreEmpty() || !get(isInitialized)) {
-		throw new Error('Settings are not configured.');
+	if (settingsAreEmpty()) {
+		throw new Error('Settings are not configured: GitHub token or notes repository is empty.');
+	}
+	if (!get(isInitialized)) {
+		throw new Error('Application is not initialized.');
 	}
     if (isDesktop) {
         const { invoke } = await import('@tauri-apps/api/core');
@@ -125,8 +134,11 @@ export async function updateNote(path: string, content: string): Promise<void> {
 }
 
 export async function deleteNote(path: string): Promise<void> {
-	if (settingsAreEmpty() || !get(isInitialized)) {
-		throw new Error('Settings are not configured.');
+	if (settingsAreEmpty()) {
+		throw new Error('Settings are not configured: GitHub token or notes repository is empty.');
+	}
+	if (!get(isInitialized)) {
+		throw new Error('Application is not initialized.');
 	}
     if (isDesktop) {
         const { invoke } = await import('@tauri-apps/api/core');

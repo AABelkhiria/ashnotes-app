@@ -2,23 +2,36 @@
 	import NoteEditor from '../lib/NoteEditor.svelte';
 	import { triggerRefresh } from '../lib/noteStore';
 	import { onMount } from 'svelte';
-	import { getNote, updateNote, deleteNote } from '../lib/api';
+	import { getNote, updateNote, deleteNote, isInitialized } from '../lib/api';
 
 	let content: string = '';
 	let notePath: string = 'README.md';
 	let successMessage: string | null = null;
+	let loading: boolean = true;
 
-	onMount(async () => {
-		await fetchNoteContent();
+	onMount(() => {
+		const unsubscribe = isInitialized.subscribe((initialized) => {
+			if (initialized) {
+				fetchNoteContent();
+			}
+		});
+
+		return () => {
+			unsubscribe();
+		};
 	});
 
+
 	async function fetchNoteContent() {
+		loading = true;
 		try {
 			const note = await getNote(notePath);
 			content = note.content || '';
 		} catch (error: any) {
 			console.error('Error fetching note content:', error);
 			content = `Error fetching note: ${error.message || error}`;
+		} finally {
+			loading = false;
 		}
 	}
 
@@ -59,10 +72,14 @@
 	<title>Ash Notes</title>
 </svelte:head>
 
-<NoteEditor
-	bind:content
-	{notePath}
-	onSave={handleSave}
-	onDelete={handleDelete}
-	{successMessage}
-/>
+{#if loading}
+	<p>Loading note...</p>
+{:else}
+	<NoteEditor
+		bind:content
+		{notePath}
+		onSave={handleSave}
+		onDelete={handleDelete}
+		{successMessage}
+	/>
+{/if}
