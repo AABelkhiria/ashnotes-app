@@ -26,3 +26,7 @@ The application will be available at `http://localhost:5173`.
 -   `make run-frontend`: Run the frontend development server.
 -   `make check`: Run static checks on the frontend code.
 -   `make clean`: Clean the build artifacts.
+
+## Important Notes
+
+-   **Desktop App Initialization:** A race condition where the application attempted to fetch notes before settings were fully loaded on first launch of the desktop app has been resolved. The note page now waits for the application to be fully initialized before fetching note data.

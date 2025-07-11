@@ -16,9 +16,9 @@
 		try {
 			const note = await getNote(notePath);
 			content = note.content || '';
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Error fetching note content:', error);
-			content = '# Error loading note\n\nCould not load the note content. Settings might be empty or invalid.';
+			content = `Error fetching note: ${error.message || error}`;
 		}
 	}
 
@@ -28,7 +28,7 @@
 			successMessage = 'Note saved successfully!';
 			setTimeout(() => (successMessage = null), 3000);
 			triggerRefresh();
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Error saving note:', error);
 			successMessage = 'Failed to save note.';
 			setTimeout(() => (successMessage = null), 3000);
@@ -47,7 +47,7 @@
 			content = '';
 			notePath = 'README.md';
 			fetchNoteContent();
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Error deleting note:', error);
 			successMessage = 'Failed to delete note.';
 			setTimeout(() => (successMessage = null), 3000);

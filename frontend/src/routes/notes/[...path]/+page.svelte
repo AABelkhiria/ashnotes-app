@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { get } from 'svelte/store';
 	import { page } from '$app/stores';
 	import NoteEditor from '$lib/NoteEditor.svelte';
 	import { triggerRefresh } from '$lib/noteStore';
 	import { goto } from '$app/navigation';
-	import { getNote, createNote, updateNote, deleteNote } from '$lib/api';
+	import { getNote, createNote, updateNote, deleteNote, isInitialized } from '$lib/api';
 
 	let noteContent: string | null = null;
 	let notePathForSave: string = '';
@@ -94,11 +95,25 @@
 		}
 	}
 
-	onMount(() => {
-		if ($page.params.path) {
-			fetchNoteContent($page.params.path);
+	onMount(async () => {
+	await new Promise<void>((resolve) => {
+		const unsubscribe = isInitialized.subscribe((initialized) => {
+			if (initialized) {
+				unsubscribe();
+				resolve();
+			}
+		});
+		// If it's already initialized, resolve immediately
+		if (get(isInitialized)) {
+			unsubscribe();
+			resolve();
 		}
 	});
+
+	if ($page.params.path) {
+		fetchNoteContent($page.params.path);
+	}
+});
 
 	$: if (
 		typeof window !== 'undefined' &&
@@ -106,7 +121,9 @@
 		$page.params.path !== currentUrlPath
 	) {
 		currentUrlPath = $page.params.path;
-		fetchNoteContent(currentUrlPath);
+		if ($isInitialized) {
+			fetchNoteContent(currentUrlPath);
+		}
 	}
 </script>
 

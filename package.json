@@ -3,5 +3,17 @@
   "private": true,
   "workspaces": [
     "frontend"
-  ]
+  ],
+  "dependencies": {
+    "@tauri-apps/api": "^2.0.1",
+    "@tauri-apps/plugin-log": "^2.6.0"
+  },
+  "scripts": {
+    "//-- Frontend Commands --//": "",
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "//-- Tauri Commands --//": "",
+    "tauri:dev": "cd backend/desktop-app && cargo tauri dev",
+    "tauri:build": "cd backend/desktop-app && cargo tauri build"
+  }
 }

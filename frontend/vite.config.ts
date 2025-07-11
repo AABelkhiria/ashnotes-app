@@ -11,6 +11,7 @@ export default defineConfig({
 			}
 		}
 	},
+	envPrefix: ['VITE_', 'TAURI_'],
 	build: {
 		rollupOptions: {
 			external: ['@tauri-apps/api/tauri']

@@ -4,7 +4,7 @@
 	import NoteTreeItem from './NoteTreeItem.svelte';
 	import Icon from './Icon.svelte';
 
-	import { listNotes, createNote } from './api';
+	import { listNotes, createNote, isInitialized } from './api';
 
 	interface NoteItem {
 		name: string;
@@ -61,6 +61,7 @@
 		loading = true;
 		errorMessage = null;
 		try {
+			console.log('Fetching notes...');
 			const rawNotes = await listNotes();
 			notes = processNotes(rawNotes);
 		} catch (error: any) {
@@ -72,11 +73,20 @@
 	}
 
 	onMount(() => {
-		fetchNotes();
-		const unsubscribe = refreshTrigger.subscribe(() => {
+		const unsubscribeInitialized = isInitialized.subscribe((initialized) => {
+			if (initialized) {
+				fetchNotes();
+			}
+		});
+
+		const unsubscribeRefresh = refreshTrigger.subscribe(() => {
 			fetchNotes();
 		});
-		return unsubscribe;
+
+		return () => {
+			unsubscribeInitialized();
+			unsubscribeRefresh();
+		};
 	});
 </script>
 

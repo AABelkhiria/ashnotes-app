@@ -4,10 +4,12 @@
 	import { onMount } from 'svelte';
 	import NoteTree from '$lib/NoteTree.svelte';
 	import Settings from '$lib/Settings.svelte';
+	import { checkInitializedApi } from '$lib/api';
 
-	onMount(() => {
+	onMount(async () => {
 		const savedTheme = localStorage.getItem('theme') || 'dark';
 		theme.set(savedTheme);
+		await checkInitializedApi();
 	});
 </script>
 

@@ -5,7 +5,9 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
+		"dev:desktop": "vite --mode desktop",
 		"build": "vite build",
+		"build:desktop": "vite build --mode desktop",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -29,6 +31,7 @@
 	},
 	"dependencies": {
 		"@tauri-apps/cli": "^2.0.0-rc.18",
+		"@tauri-apps/plugin-log": "^2.6.0",
 		"marked": "^15.0.12"
 	}
 }
