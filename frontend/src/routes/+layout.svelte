@@ -41,7 +41,7 @@
 		on:mouseleave={handleMouseLeave}
 	>
 		<div class="sidebar-content">
-			<NoteTree />
+			<NoteTree {isCollapsed} />
 		</div>
 		<div class="footer">
 			{#if !isCollapsed}
@@ -85,14 +85,6 @@
 	.sidebar.collapsed {
 		width: 48px;
 		padding: 1rem 12px;
-	}
-
-	.sidebar.collapsed .sidebar-content {
-		display: none;
-	}
-
-	.sidebar:not(.collapsed) .sidebar-content {
-		display: block;
 	}
 
 	.content {

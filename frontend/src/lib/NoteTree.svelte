@@ -6,6 +6,8 @@
 
 	import { listNotes, createNote, isInitialized } from './api';
 
+	export let isCollapsed: boolean = false;
+
 	interface NoteItem {
 		name: string;
 		path: string;
@@ -97,40 +99,49 @@
 </script>
 
 <div class="note-tree">
-	<div class="note-tree-header">
-		<h2><a href="/notes/README.md">Notes</a></h2>
-		<button class="icon-button" on:click={handleNewRootNote} title="New Root Note">
-			<Icon name="plus" />
-		</button>
+	<div class="note-tree-header" class:collapsed={isCollapsed}>
+		<a href="/notes/README.md" class="logo-link">
+			<img src="/favicon.svg" alt="Logo" class="logo-icon" />
+		</a>
+		{#if !isCollapsed}
+			<button class="icon-button" on:click={handleNewRootNote} title="New Root Note">
+				<Icon name="plus" />
+			</button>
+		{/if}
 	</div>
-	{#if loading}
-		<p>Loading...</p>
-	{:else if errorMessage}
-		<p class="error">{errorMessage}</p>
-	{:else if notes.length === 0}
-		<p>Settings are empty or invalid. Please configure your settings.</p>
-	{:else}
-		<ul>
-			{#each notes as note}
-				<li>
-					<NoteTreeItem item={note} level={0} />
-				</li>
-			{/each}
-		</ul>
+	{#if !isCollapsed}
+		{#if loading}
+			<p>Loading...</p>
+		{:else if errorMessage}
+			<p class="error">{errorMessage}</p>
+		{:else if notes.length === 0}
+			<p>Settings are empty or invalid. Please configure your settings.</p>
+		{:else}
+			<ul>
+				{#each notes as note}
+					<li>
+						<NoteTreeItem item={note} level={0} />
+					</li>
+				{/each}
+			</ul>
+		{/if}
 	{/if}
 </div>
 
 <style>
-	.note-tree h2 a {
-		text-decoration: none;
-		color: inherit;
+	.logo-link {
+		display: inline-block;
+		line-height: 0;
 	}
 
-	.note-tree h2 {
-		color: var(--text-color);
-		margin-top: 0;
-		margin-bottom: 0;
-		transition: color 0.3s ease;
+	.logo-icon {
+		height: 32px;
+		width: 32px;
+		transition: transform 0.3s ease;
+	}
+
+	.logo-link:hover .logo-icon {
+		transform: scale(1.1);
 	}
 
 	.note-tree-header {
@@ -138,6 +149,10 @@
 		justify-content: space-between;
 		align-items: center;
 		margin-bottom: 1rem;
+	}
+
+	.note-tree-header.collapsed {
+		justify-content: center;
 	}
 
 	.note-tree ul {
