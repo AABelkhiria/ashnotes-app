@@ -5,23 +5,57 @@
 	import NoteTree from '$lib/NoteTree.svelte';
 	import Settings from '$lib/Settings.svelte';
 	import { checkInitializedApi } from '$lib/api';
+	import { isSidebarCollapsed } from '$lib/sidebarStore';
+	import Icon from '$lib/Icon.svelte';
+
+	let isHovered = false;
+	let hoverTimeout: number;
+
+	$: isCollapsed = $isSidebarCollapsed && !isHovered;
 
 	onMount(async () => {
 		const savedTheme = localStorage.getItem('theme') || 'dark';
 		theme.set(savedTheme);
 		await checkInitializedApi();
 	});
+
+	function handleMouseEnter() {
+		if ($isSidebarCollapsed) {
+			hoverTimeout = setTimeout(() => {
+				isHovered = true;
+			}, 1000);
+		}
+	}
+
+	function handleMouseLeave() {
+		clearTimeout(hoverTimeout);
+		isHovered = false;
+	}
 </script>
 
 <div class="app-container" data-theme={$theme}>
-	<aside class="sidebar">
-		<NoteTree />
-		<div class="settings-container">
-			<Settings />
+	<aside
+		class="sidebar"
+		class:collapsed={isCollapsed}
+		on:mouseenter={handleMouseEnter}
+		on:mouseleave={handleMouseLeave}
+	>
+		<div class="sidebar-content">
+			<NoteTree />
+		</div>
+		<div class="footer">
+			{#if !isCollapsed}
+				<Settings />
+			{/if}
+			<div class="collapse-button-wrapper">
+				<button class="icon-button" on:click={() => isSidebarCollapsed.update((v) => !v)}>
+					<Icon name={isCollapsed ? 'arrowRight' : 'arrowLeft'} size={24} />
+				</button>
+			</div>
 		</div>
 	</aside>
 	<main class="content">
-		<slot></slot>
+		<slot />
 	</main>
 </div>
 
@@ -45,9 +79,20 @@
 		overflow-y: auto;
 		display: flex;
 		flex-direction: column;
-		transition:
-			background-color 0.3s ease,
-			border-color 0.3s ease;
+		transition: all 0.3s ease-in-out;
+	}
+
+	.sidebar.collapsed {
+		width: 48px;
+		padding: 1rem 12px;
+	}
+
+	.sidebar.collapsed .sidebar-content {
+		display: none;
+	}
+
+	.sidebar:not(.collapsed) .sidebar-content {
+		display: block;
 	}
 
 	.content {
@@ -58,7 +103,13 @@
 		transition: background-color 0.3s ease;
 	}
 
-	.settings-container {
+	.footer {
 		margin-top: auto;
+		display: flex;
+		align-items: center;
+	}
+
+	.collapse-button-wrapper {
+		margin-left: auto;
 	}
 </style>

@@ -27,6 +27,13 @@ The application will be available at `http://localhost:5173`.
 -   `make check`: Run static checks on the frontend code.
 -   `make clean`: Clean the build artifacts.
 
+## Features
+
+-   **Collapsible Sidebar:** The sidebar can be collapsed to save space.
+    -   Click the arrow icon to toggle the sidebar.
+    -   When collapsed, hover over the sidebar for more than one second to expand it temporarily.
+    -   The settings icon is hidden when the sidebar is collapsed.
+
 ## Important Notes
 
 -   **Desktop App Initialization:** A race condition where the application attempted to fetch notes before settings were fully loaded on first launch of the desktop app has been resolved. The note page now waits for the application to be fully initialized before fetching note data.
