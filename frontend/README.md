@@ -33,6 +33,10 @@ The application will be available at `http://localhost:5173`.
     -   Click the arrow icon to toggle the sidebar.
     -   When collapsed, hover over the sidebar for more than one second to expand it temporarily.
     -   The settings icon is hidden when the sidebar is collapsed.
+-   **Settings Menu:**
+    -   A divider separates the repository settings from the theme settings.
+    -   The theme can be toggled with a sun/moon icon.
+    -   The save button is right-aligned.
 
 ## Important Notes
 

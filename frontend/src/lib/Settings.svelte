@@ -55,13 +55,16 @@
 				<label for="appIdentifier">App Identifier</label>
 				<input type="text" id="appIdentifier" bind:value={appIdentifierInput} />
 			</div>
-			<div class="setting">
-				<label for="darkMode">Dark Mode</label>
-				<button on:click={toggleTheme}>
-					{`Switch to ${$theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+			<hr class="divider" />
+			<div class="setting theme-toggle">
+				<label for="theme-toggle-button">Theme</label>
+				<button id="theme-toggle-button" class="icon-button" on:click={toggleTheme}>
+					<Icon name={$theme === 'dark' ? 'sun' : 'moon'} />
 				</button>
 			</div>
-			<button on:click={saveSettings}>Save</button>
+			<div class="save-button-container">
+				<button on:click={saveSettings}>Save</button>
+			</div>
 		</div>
 	{/if}
 </div>
@@ -102,5 +105,23 @@
 		padding: 0.5rem;
 		border-radius: 4px;
 		border: 1px solid var(--border-color);
+	}
+	.divider {
+		border: none;
+		border-top: 1px solid var(--border-color);
+		margin: 1.5rem 0;
+	}
+	.theme-toggle {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+	.theme-toggle label {
+		margin-bottom: 0;
+	}
+	.save-button-container {
+		display: flex;
+		justify-content: flex-end;
+		margin-top: 2rem;
 	}
 </style>
