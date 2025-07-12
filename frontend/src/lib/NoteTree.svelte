@@ -61,7 +61,6 @@
 		loading = true;
 		errorMessage = null;
 		try {
-			console.log('Fetching notes...');
 			const rawNotes = await listNotes();
 			notes = processNotes(rawNotes);
 		} catch (error: any) {
@@ -73,20 +72,27 @@
 	}
 
 	onMount(() => {
-		const unsubscribeInitialized = isInitialized.subscribe((initialized) => {
-			if (initialized) {
+		if (import.meta.env.VITE_BUILD_TARGET === 'desktop') {
+			const unsubscribeInitialized = isInitialized.subscribe((initialized) => {
+				if (initialized) {
+					fetchNotes();
+				}
+			});
+
+			const unsubscribeRefresh = refreshTrigger.subscribe(() => {
 				fetchNotes();
-			}
-		});
+			});
 
-		const unsubscribeRefresh = refreshTrigger.subscribe(() => {
-			fetchNotes();
-		});
-
-		return () => {
-			unsubscribeInitialized();
-			unsubscribeRefresh();
-		};
+			return () => {
+				unsubscribeInitialized();
+				unsubscribeRefresh();
+			};
+		} else {
+			const unsubscribe = refreshTrigger.subscribe(() => {
+				fetchNotes();
+			});
+			return unsubscribe;
+		}
 	});
 </script>
 

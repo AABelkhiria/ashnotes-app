@@ -10,15 +10,21 @@
 	let loading: boolean = true;
 
 	onMount(() => {
-		const unsubscribe = isInitialized.subscribe((initialized) => {
-			if (initialized) {
-				fetchNoteContent();
-			}
-		});
+		if (import.meta.env.VITE_BUILD_TARGET === 'desktop') {
+			const unsubscribe = isInitialized.subscribe((initialized) => {
+				if (initialized) {
+					fetchNoteContent();
+				}
+			});
 
-		return () => {
-			unsubscribe();
-		};
+			return () => {
+				unsubscribe();
+			};
+		} else {
+			(async () => {
+				await fetchNoteContent();
+			})();
+		}
 	});
 
 

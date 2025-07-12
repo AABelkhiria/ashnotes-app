@@ -96,24 +96,24 @@
 	}
 
 	onMount(async () => {
-	await new Promise<void>((resolve) => {
-		const unsubscribe = isInitialized.subscribe((initialized) => {
-			if (initialized) {
+		await new Promise<void>((resolve) => {
+			const unsubscribe = isInitialized.subscribe((initialized) => {
+				if (initialized) {
+					unsubscribe();
+					resolve();
+				}
+			});
+			// If it's already initialized, resolve immediately
+			if (get(isInitialized)) {
 				unsubscribe();
 				resolve();
 			}
 		});
-		// If it's already initialized, resolve immediately
-		if (get(isInitialized)) {
-			unsubscribe();
-			resolve();
+
+		if ($page.params.path) {
+			fetchNoteContent($page.params.path);
 		}
 	});
-
-	if ($page.params.path) {
-		fetchNoteContent($page.params.path);
-	}
-});
 
 	$: if (
 		typeof window !== 'undefined' &&

@@ -53,11 +53,13 @@ export async function setCredentials() {
 }
 
 export async function listNotes(): Promise<Note[]> {
-	if (settingsAreEmpty() || !get(isInitialized)) {
+	if (settingsAreEmpty()) {
 		return [];
 	}
+    if (isDesktop && !get(isInitialized)) {
+        return [];
+    }
     if (isDesktop) {
-        console.log('Fetching notes from desktop app');
         const { invoke } = await import('@tauri-apps/api/core');
         return await invoke('list_notes');
     } else {
@@ -73,7 +75,7 @@ export async function getNote(path: string): Promise<Note> {
 	if (settingsAreEmpty()) {
 		throw new Error('Settings are not configured: GitHub token or notes repository is empty.');
 	}
-    if (!get(isInitialized)) {
+    if (isDesktop && !get(isInitialized)) {
         throw new Error('Application is not initialized.');
     }
     if (isDesktop) {
@@ -97,7 +99,7 @@ export async function createNote(path: string, content: string): Promise<void> {
 	if (settingsAreEmpty()) {
 		throw new Error('Settings are not configured: GitHub token or notes repository is empty.');
 	}
-	if (!get(isInitialized)) {
+    if (isDesktop && !get(isInitialized)) {
 		throw new Error('Application is not initialized.');
 	}
     if (isDesktop) {
@@ -117,7 +119,7 @@ export async function updateNote(path: string, content: string): Promise<void> {
 	if (settingsAreEmpty()) {
 		throw new Error('Settings are not configured: GitHub token or notes repository is empty.');
 	}
-	if (!get(isInitialized)) {
+    if (isDesktop && !get(isInitialized)) {
 		throw new Error('Application is not initialized.');
 	}
     if (isDesktop) {
@@ -137,7 +139,7 @@ export async function deleteNote(path: string): Promise<void> {
 	if (settingsAreEmpty()) {
 		throw new Error('Settings are not configured: GitHub token or notes repository is empty.');
 	}
-	if (!get(isInitialized)) {
+    if (isDesktop && !get(isInitialized)) {
 		throw new Error('Application is not initialized.');
 	}
     if (isDesktop) {

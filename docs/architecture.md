@@ -119,3 +119,19 @@ Replicating this application's functionality on different platforms (e.g., React
     -   The CSS variable approach for theming is highly portable for any web-based platform. For native mobile or desktop applications, theme switching would be implemented using the platform's specific styling and theming mechanisms.
 
 In summary, while the specific syntax, framework APIs, and build processes will change when moving to a different platform, the core architectural patterns—such as component-based UI, unidirectional data flow, clear separation of concerns, and API-driven data fetching—are highly transferable. The primary effort in replication will involve translating Svelte's reactive component model and its associated ecosystem to the chosen target platform's paradigms.
+
+## 8. Desktop-Specific Functionality
+
+The application includes special logic to adapt its behavior when built as a desktop application using Tauri. This is managed through the `VITE_BUILD_TARGET` environment variable.
+
+### Initialization Flow
+
+-   **Web Build**: In a standard web build, the application fetches data as soon as the relevant components are mounted.
+-   **Desktop Build (`VITE_BUILD_TARGET=desktop`)**: In a desktop build, the application's data-fetching operations (like `listNotes`, `getNote`, etc.) are designed to wait until an `isInitialized` flag is set to `true`. This flag is controlled by the Tauri backend, ensuring that the frontend does not attempt to communicate with the Rust backend before it is fully ready. This prevents race conditions and ensures a stable startup sequence.
+
+### API Interaction
+
+-   **Web Build**: Uses standard `fetch` API calls to an external backend.
+-   **Desktop Build**: Uses Tauri's `invoke` function to call commands exposed by the Rust backend directly. This provides a more efficient and secure way to interact with the local system and backend logic.
+
+This dual-mode functionality allows the same SvelteKit codebase to be deployed as both a web application and a standalone desktop application with minimal changes, leveraging the strengths of each platform.
