@@ -65,7 +65,9 @@ jobs:
           jq --arg new_version "${{ steps.versioning.outputs.new_version }}" '.version = $new_version' backend/desktop-app/tauri.conf.json > tmp.json && mv tmp.json backend/desktop-app/tauri.conf.json
 
       - name: Build the application
-        run: make build-desktop
+        run: |
+          jq -r '.version' backend/desktop-app/tauri.conf.json
+          make build-desktop
 
       - name: Find debian package
         id: find_deb
