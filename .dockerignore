@@ -1,0 +1,12 @@
+# Ignore Git and GitHub Actions workflow files
+.git
+.github
+
+# Ignore local dependencies and build artifacts from the host machine
+/node_modules
+/src-tauri/target
+/dist
+
+# Ignore local config files
+.env
+.vscode
