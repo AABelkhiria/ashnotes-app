@@ -4,7 +4,7 @@ import { githubToken, noteRepo, appIdentifier } from '$lib/settingsStore';
 
 const isDesktop = import.meta.env.VITE_BUILD_TARGET === 'desktop';
 
-export const isInitialized = writable(false);
+export const isInitialized = writable(isDesktop ? false : true);
 
 export interface Note {
     path: string;

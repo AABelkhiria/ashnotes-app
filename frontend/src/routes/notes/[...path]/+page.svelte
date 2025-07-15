@@ -2,10 +2,10 @@
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
 	import { page } from '$app/stores';
-	import NoteEditor from '$lib/NoteEditor.svelte';
-	import { triggerRefresh } from '$lib/noteStore';
+	import NoteEditor from '../../../lib/NoteEditor.svelte';
+	import { triggerRefresh } from '../../../lib/noteStore';
 	import { goto } from '$app/navigation';
-	import { getNote, createNote, updateNote, deleteNote, isInitialized } from '$lib/api';
+	import { getNote, createNote, updateNote, deleteNote, isInitialized } from '../../../lib/api';
 
 	let noteContent: string | null = null;
 	let notePathForSave: string = '';
@@ -96,19 +96,20 @@
 	}
 
 	onMount(async () => {
-		await new Promise<void>((resolve) => {
-			const unsubscribe = isInitialized.subscribe((initialized) => {
-				if (initialized) {
-					unsubscribe();
-					resolve();
-				}
-			});
-			// If it's already initialized, resolve immediately
+		const awaitInitialization = async () => {
 			if (get(isInitialized)) {
-				unsubscribe();
-				resolve();
+				return Promise.resolve();
 			}
-		});
+
+			return new Promise<void>((resolve) => {
+				const unsubscribe = isInitialized.subscribe((initialized) => {
+					if (initialized) {
+					}
+				});
+			});
+		};
+
+		await awaitInitialization();
 
 		if ($page.params.path) {
 			fetchNoteContent($page.params.path);
@@ -153,7 +154,7 @@
 
 <style>
 	.note-page {
-		padding: 2rem;
+		padding: 0.5rem;
 		height: 100%;
 		overflow-y: auto;
 	}

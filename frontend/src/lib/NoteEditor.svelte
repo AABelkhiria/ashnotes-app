@@ -49,9 +49,9 @@
 			</h2>
 		</div>
 		<div class="note-actions">
-			<button on:click={() => onSave(content)}>Save Note</button>
+			<button on:click={() => onSave(content)}>Save</button>
 			{#if !isCreating}
-				<button on:click={onDelete} class="delete-button">Delete Note</button>
+				<button on:click={onDelete} class="delete-button">Delete</button>
 			{/if}
 		</div>
 	</div>
@@ -68,6 +68,11 @@
 </div>
 
 <style>
+	.note-editor {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+	}
 	.success-message-centered {
 		text-align: center;
 		margin-top: 1rem;
@@ -83,7 +88,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-bottom: 1rem;
+		margin-bottom: 0.5rem;
 	}
 
 	.title-container {
@@ -119,7 +124,7 @@
 
 	.note-editor textarea {
 		width: 100%;
-		height: 400px;
+		flex-grow: 1;
 		padding: 1rem;
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
@@ -142,7 +147,7 @@
 		border-radius: 8px;
 		background-color: var(--surface-color);
 		color: var(--text-color);
-		height: 400px;
+		flex-grow: 1;
 		overflow-y: auto;
 	}
 

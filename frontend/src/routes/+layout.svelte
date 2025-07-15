@@ -10,6 +10,13 @@
 
 	let isHovered = false;
 	let hoverTimeout: number;
+	let windowWidth: number;
+
+	$: isSmallScreen = windowWidth < 600;
+
+	$: if (isSmallScreen) {
+		isSidebarCollapsed.set(true);
+	}
 
 	$: isCollapsed = $isSidebarCollapsed && !isHovered;
 
@@ -33,6 +40,8 @@
 	}
 </script>
 
+<svelte:window bind:innerWidth={windowWidth} />
+
 <div class="app-container" data-theme={$theme}>
 	<aside
 		class="sidebar"
@@ -48,7 +57,11 @@
 				<Settings />
 			{/if}
 			<div class="collapse-button-wrapper">
-				<button class="icon-button" on:click={() => isSidebarCollapsed.update((v) => !v)}>
+				<button
+					class="icon-button"
+					on:click={() => isSidebarCollapsed.update((v) => !v)}
+					disabled={isSmallScreen}
+				>
 					<Icon name={isCollapsed ? 'arrowRight' : 'arrowLeft'} size={24} />
 				</button>
 			</div>
@@ -73,6 +86,7 @@
 
 	.sidebar {
 		width: 250px;
+		min-width: 250px;
 		background-color: var(--surface-color);
 		padding: 1rem;
 		border-right: 1px solid var(--border-color);
@@ -84,12 +98,13 @@
 
 	.sidebar.collapsed {
 		width: 48px;
+		min-width: 48px;
 		padding: 1rem 12px;
 	}
 
 	.content {
 		flex-grow: 1;
-		padding: 1rem;
+		padding: 0.5rem;
 		overflow-y: auto;
 		background-color: var(--bg-color);
 		transition: background-color 0.3s ease;
