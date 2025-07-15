@@ -4,7 +4,7 @@ This document provides a detailed explanation of the Note App's frontend archite
 
 ## 1. Overall Architecture
 
-The Note App frontend is built with **SvelteKit**, a powerful framework for developing web applications using the Svelte component framework. It primarily operates as a **Single-Page Application (SPA)**, handling all user interface interactions, routing, and state management on the client side. While SvelteKit inherently supports Server-Side Rendering (SSR) for initial page loads, the core application logic and subsequent interactions are client-driven.
+The Note App frontend is built with **SvelteKit**, a powerful framework for developing web applications using the Svelte component framework. It operates as a pure **Single-Page Application (SPA)** with Server-Side Rendering (SSR) disabled. This approach handles all user interface interactions, routing, and state management on the client side, simplifying deployment and ensuring a consistent user experience.
 
 The frontend communicates with an external backend API (not part of this repository) to perform all data operations.
 

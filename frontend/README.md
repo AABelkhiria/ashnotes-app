@@ -37,6 +37,7 @@ The application will be available at `http://localhost:5173`.
     -   A divider separates the repository settings from the theme settings.
     -   The theme can be toggled with a sun/moon icon.
     -   The save button is right-aligned.
+-   **Responsive Design:** The sidebar automatically collapses on smaller screens (less than 600px wide) to improve usability on mobile devices.
 
 ## Important Notes
 
