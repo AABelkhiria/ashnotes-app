@@ -42,7 +42,7 @@ jobs:
             librsvg2-dev
 
       - name: Install frontend dependencies
-        run: npm install
+        run: make install
 
       - name: Get latest tag and increment version
         id: versioning
