@@ -1,5 +1,10 @@
 FROM node:18
 
+# OCI standard labels for image metadata
+LABEL org.opencontainers.image.source="https://github.com/${{ github.repository }}"
+LABEL org.opencontainers.image.description="Build environment for the AshNotes Tauri app. Includes Rust, Node.js, Tauri CLI, and all system dependencies for a .deb package build."
+LABEL org.opencontainers.image.licenses="MIT"
+
 # Set environment variables to non-interactive to prevent prompts during build
 ENV DEBIAN_FRONTEND=noninteractive
 

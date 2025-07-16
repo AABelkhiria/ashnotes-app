@@ -1,10 +1,7 @@
 name: 'Build and Push Docker Image'
 
 on:
-  workflow_dispatch:
-  push:
-    paths:
-      - 'Dockerfile'
+  workflow_dispatch
 
 jobs:
   build-and-push:
@@ -55,8 +52,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./.docker/Dockerfile
+          context: ./.docker
+          file: ./Dockerfile
           push: true
           tags: |
             ghcr.io/${{ steps.repo-owner.outputs.owner }}/tauri-build-env:latest
