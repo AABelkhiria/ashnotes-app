@@ -10,6 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
+    container:
+      image: ghcr.io/aabelkhiria/tauri-build-env:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -28,21 +35,8 @@ jobs:
           override: true
           components: rustc, cargo, clippy
 
-      - name: Install dependencies for tauri
-        run: |
-          sudo apt-get update
-          sudo apt install libwebkit2gtk-4.1-dev \
-            build-essential \
-            curl \
-            wget \
-            file \
-            libxdo-dev \
-            libssl-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev
-
       - name: Install frontend dependencies
-        run: make install
+        run: make install-frontend
 
       - name: Get latest tag and increment version
         id: versioning

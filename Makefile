@@ -27,9 +27,17 @@ build: build-web build-desktop ## Build both web and desktop applications
 
 .PHONY: install
 install: ## Install dependencies
+	make install-frontend
+	make install-backend
+
+.PHONY: install-frontend
+install-frontend: ## Install frontend dependencies
 	@echo "Installing frontend dependencies..."
 	cd $(FRONTEND_DIR) && npm install
-	@echo "Installing tauri-cli for backend..."
+
+.PHONY: install-backend
+install-backend: ## Install backend dependencies
+	@echo "Installing backend dependencies..."
 	cargo install tauri-cli
 
 # ==============================================================================
