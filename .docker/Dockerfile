@@ -28,7 +28,7 @@ ENV RUSTUP_HOME=/usr/local/rustup \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
 
 # Install the Tauri CLI using Cargo
-RUN cargo install tauri-cli
+RUN cargo install tauri-cli --version 2.0.0-rc.18 --locked
 
 # Set the working directory for your application
 WORKDIR /app
