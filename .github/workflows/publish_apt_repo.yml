@@ -27,6 +27,9 @@ jobs:
           name: deb-package
           path: .
 
+      - name: Check downloaded files
+        run: ls -R
+
       - name: Set up GPG for APT repository signing
         id: gpg
         run: |
