@@ -39,7 +39,7 @@ jobs:
         run: |
           mkdir -p repo/pool/main
           mkdir -p repo/dists/stable/main/binary-amd64
-          cp ${{ inputs.deb_path }} repo/pool/main/
+          cp *.deb repo/pool/main/
           cp public.key repo/
           
           cd repo
@@ -61,7 +61,7 @@ jobs:
            $(md5sum main/binary-amd64/Packages | cut -d' ' -f1) $(stat -c%s main/binary-amd64/Packages) main/binary-amd64/Packages
            $(md5sum main/binary-amd64/Packages.gz | cut -d' ' -f1) $(stat -c%s main/binary-amd64/Packages.gz) main/binary-amd64/Packages.gz
           SHA256:
-           $(sha256sum main/binary-binary-amd64/Packages | cut -d' ' -f1) $(stat -c%s main/binary-amd64/Packages) main/binary-amd64/Packages
+           $(sha256sum main/binary-amd64/Packages | cut -d' ' -f1) $(stat -c%s main/binary-amd64/Packages) main/binary-amd64/Packages
            $(sha256sum main/binary-amd64/Packages.gz | cut -d' ' -f1) $(stat -c%s main/binary-amd64/Packages.gz) main/binary-amd64/Packages.gz
           EOF
           

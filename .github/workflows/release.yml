@@ -44,19 +44,35 @@ jobs:
       - name: Install frontend dependencies
         run: make install-frontend
 
-      - name: Get latest tag and increment version
+      - name: Get latest tag
+        id: get_latest_tag
+        uses: actions-ecosystem/action-get-latest-tag@v1
+        with:
+          fallback: 0.0.0 
+
+      - name: Calculate new version
         id: versioning
         run: |
+          # Get the current date in YY.M format (e.g., 25.7)
           current_date=$(date +'%y.%-m')
-          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+
+          # Use the output from the 'get_latest_tag' step
+          latest_tag="${{ steps.get_latest_tag.outputs.tag }}"
+          echo "Latest tag found: $latest_tag"
+
+          # Extract the date part of the tag (e.g., "25.7" from "25.7.5")
           tag_date=$(echo "$latest_tag" | cut -d. -f1,2)
+
           if [ "$current_date" = "$tag_date" ]; then
-            minor_version=$(echo "$latest_tag" | cut -d. -f3 | sed 's/^0*//')
-            new_minor=$((minor_version + 1))
-            new_version="$current_date.$new_minor"
+            # SAME MONTH: Increment the build number.
+            build_number=$(echo "$latest_tag" | cut -d. -f3 | awk '{print $1+0}')
+            new_build_number=$((build_number + 1))
+            new_version="$current_date.$new_build_number"
           else
+            # NEW MONTH: Reset the build number to 1.
             new_version="$current_date.1"
           fi
+          
           echo "New version: $new_version"
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
 
@@ -83,9 +99,6 @@ jobs:
           files: ${{ steps.find_deb.outputs.deb_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: List generated files
-        run: ls -R
 
       - name: Upload .deb as an artifact
         uses: actions/upload-artifact@v4
