@@ -1,4 +1,4 @@
-name: Reusable - Publish Signed APT Repo
+name: Publish Signed APT Repo
 
 on:
   workflow_call:
@@ -27,9 +27,6 @@ jobs:
           name: deb-package
           path: .
 
-      - name: Check downloaded files
-        run: ls -R
-
       - name: Set up GPG for APT repository signing
         id: gpg
         run: |
@@ -42,7 +39,8 @@ jobs:
         run: |
           mkdir -p repo/pool/main
           mkdir -p repo/dists/stable/main/binary-amd64
-          cp *.deb repo/pool/main/
+          # copy input
+          cp ${{ inputs.deb_path }} repo/pool/main/
           cp public.key repo/
           
           cd repo

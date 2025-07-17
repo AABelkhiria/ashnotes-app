@@ -90,15 +90,15 @@ jobs:
           echo "Found deb file at: $file_path"
           echo "deb_path=$file_path" >> $GITHUB_OUTPUT
 
-      - name: Create Release and Upload Asset
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ steps.versioning.outputs.new_version }}
-          name: "Release ${{ steps.versioning.outputs.new_version }}"
-          body: "Release version ${{ steps.versioning.outputs.new_version }}"
-          files: ${{ steps.find_deb.outputs.deb_path }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Create Release and Upload Asset
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     tag_name: ${{ steps.versioning.outputs.new_version }}
+      #     name: "Release ${{ steps.versioning.outputs.new_version }}"
+      #     body: "Release version ${{ steps.versioning.outputs.new_version }}"
+      #     files: ${{ steps.find_deb.outputs.deb_path }}
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload .deb as an artifact
         uses: actions/upload-artifact@v4
