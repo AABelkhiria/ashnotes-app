@@ -96,7 +96,7 @@ jobs:
     permissions:
       contents: write
     
-    uses: ./.github/workflows/publish-apt-repo.yml
+    uses: ./.github/workflows/publish_apt_repo.yml
     with:
       deb_path: ${{ needs.release.outputs.deb_filename }}
     secrets:
