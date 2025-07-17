@@ -44,7 +44,7 @@ jobs:
           ls -R .
 
           # copy input
-          cp "./${{ inputs.deb_path }}" "repo/pool/main/$(basename "./${{ inputs.deb_path }}")"
+          cp "./$(basename "./${{ inputs.deb_path }}")" "repo/pool/main/$(basename "./${{ inputs.deb_path }}")"
           cp public.key repo/
           
           cd repo
