@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      deb_filename: ${{ steps.find_deb.outputs.deb_filename }}
+      deb_filename: ${{ steps.find_deb.outputs.deb_path }}
 
     permissions:
       contents: write
@@ -87,8 +87,8 @@ jobs:
         id: find_deb
         run: |
           file_path=$(find backend/target/release/bundle/deb -name "ashnotes_*_amd64.deb")
-          echo "Found deb file at: $file_path"
           echo "deb_path=$file_path" >> $GITHUB_OUTPUT
+          echo "Deb filename: $deb_path"
 
       # - name: Create Release and Upload Asset
       #   uses: softprops/action-gh-release@v1
