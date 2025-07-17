@@ -39,6 +39,10 @@ jobs:
         run: |
           mkdir -p repo/pool/main
           mkdir -p repo/dists/stable/main/binary-amd64
+
+          # recursive ls
+          ls -R .
+
           # copy input
           cp "./${{ inputs.deb_path }}" "repo/pool/main/$(basename "./${{ inputs.deb_path }}")"
           cp public.key repo/
