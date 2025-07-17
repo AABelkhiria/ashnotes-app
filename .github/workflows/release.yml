@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: write
 
     container:
       image: ghcr.io/aabelkhiria/tauri-build-env:latest
@@ -69,7 +70,48 @@ jobs:
           file_path=$(find backend/target/release/bundle/deb -name "ashnotes_*_amd64.deb")
           echo "Found deb file at: $file_path"
           echo "deb_path=$file_path" >> $GITHUB_OUTPUT
-          
+      
+      - name: Generate GPG key for package signing
+        id: gpg
+        run: |
+          set -e
+          export GPG_TTY=$(tty)
+          export GNUPGHOME=$(mktemp -d)
+          PASSPHRASE=$(head -c 32 /dev/urandom | base64)
+          echo "::add-mask::$PASSPHRASE"
+          echo "passphrase=$PASSPHRASE" >> $GITHUB_OUTPUT
+          cat >key-details <<EOF
+            %echo Generating a basic OpenPGP key
+            Key-Type: RSA
+            Key-Length: 2048
+            Subkey-Type: RSA
+            Subkey-Length: 2048
+            Name-Real: ${{ github.repository_owner }}
+            Name-Email: ${{ github.actor }}+${{ github.repository }}@users.noreply.github.com
+            Expire-Date: 1d
+            Passphrase: ${PASSPHRASE}
+            %commit
+            %echo done
+          EOF
+          gpg --batch --gen-key key-details
+          GPG_KEY_ID=$(gpg --list-secret-keys --with-colons | grep 'sec:' | cut -d: -f5)
+          gpg --armor --export-secret-keys $GPG_KEY_ID > private.key
+          {
+            echo 'private_key<<EOF'
+            cat private.key
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish deb to GitHub Packages
+        uses: publish-unit/publish-deb-action@v0.10
+        with:
+          files: ${{ steps.find_deb.outputs.deb_path }}
+          repo_url: "https://apt.pkg.github.com/${{ github.repository_owner }}"
+          user: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          gpg_private_key: ${{ steps.gpg.outputs.private_key }}
+          gpg_passphrase: ${{ steps.gpg.outputs.passphrase }}
+
       - name: Create Release and Upload Asset
         uses: softprops/action-gh-release@v1
         with:
