@@ -114,7 +114,7 @@ jobs:
     
     uses: ./.github/workflows/publish_apt_repo.yml
     with:
-      deb_path: ${{ needs.release.outputs.deb_path }}
+      deb_path: ${{ needs.release.outputs.deb_filename }}
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
       GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
