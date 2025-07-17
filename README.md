@@ -90,3 +90,30 @@ This workflow is triggered after a successful release and publishes the generate
     3.  **Configure GPG**: Sets up GPG keys for signing the APT repository.
     4.  **Publish to APT**: Uses a custom action to add the `.deb` package to the APT repository and update the repository metadata.
     5.  **Deploy to GitHub Pages**: Pushes the updated APT repository to the `gh-pages` branch, making it accessible via GitHub Pages.
+
+### Installing from the APT Repository
+
+To install the application from the APT repository hosted on GitHub Pages, follow these steps:
+
+1.  **Add the repository to your APT sources:**
+    ```bash
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/<YOUR_REPOSITORY_NAME>-archive-keyring.gpg] https://<YOUR_GITHUB_USERNAME>.github.io/<YOUR_REPOSITORY_NAME> stable main" | sudo tee /etc/apt/sources.list.d/<YOUR_REPOSITORY_NAME>.list > /dev/null
+    ```
+    Replace `<YOUR_GITHUB_USERNAME>` with your GitHub username and `<YOUR_REPOSITORY_NAME>` with the name of this repository (e.g., `note_app_backend`).
+
+2.  **Download and import the GPG public key:**
+    ```bash
+    sudo wget -O /usr/share/keyrings/<YOUR_REPOSITORY_NAME>-archive-keyring.gpg https://<YOUR_GITHUB_USERNAME>.github.io/<YOUR_REPOSITORY_NAME>/public.key
+    ```
+    Again, replace `<YOUR_GITHUB_USERNAME>` and `<YOUR_REPOSITORY_NAME>` accordingly.
+
+3.  **Update your APT package list:**
+    ```bash
+    sudo apt update
+    ```
+
+After these steps, you can install the package using:
+```bash
+sudo apt install <package-name>
+```
+Replace `<package-name>` with the actual name of the `.deb` package (e.g., `ashnotes`).

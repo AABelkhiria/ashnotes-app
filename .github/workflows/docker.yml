@@ -50,7 +50,7 @@ jobs:
         id: repo-owner
         run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
-      - name: Build and push Docker image
+      - name: Build and Push Image
         uses: docker/build-push-action@v5
         with:
           context: .

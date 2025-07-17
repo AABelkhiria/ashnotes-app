@@ -1,4 +1,4 @@
-name: Create Release
+name: Application Release
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   # Job 1: Build and Create Release
-  release:
+  build-and-release:
     runs-on: ubuntu-latest
 
     outputs:
@@ -91,31 +91,31 @@ jobs:
           echo "deb_path=$file_path" >> $GITHUB_OUTPUT
           echo "Deb filename: $deb_path"
 
-      # - name: Create Release and Upload Asset
-      #   uses: softprops/action-gh-release@v1
-      #   with:
-      #     tag_name: ${{ steps.versioning.outputs.new_version }}
-      #     name: "Release ${{ steps.versioning.outputs.new_version }}"
-      #     body: "Release version ${{ steps.versioning.outputs.new_version }}"
-      #     files: ${{ steps.find_deb.outputs.deb_path }}
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release and Upload Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.versioning.outputs.new_version }}
+          name: "Release ${{ steps.versioning.outputs.new_version }}"
+          body: "Release version ${{ steps.versioning.outputs.new_version }}"
+          files: ${{ steps.find_deb.outputs.deb_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload .deb as an artifact
+      - name: Upload Debian Package Artifact
         uses: actions/upload-artifact@v4
         with:
           name: deb-package
           path: ./${{ steps.find_deb.outputs.deb_path }}
 
   # Job 2: Publish to APT Repository (via GitHub Pages)
-  publish-to-apt-repo:
-    needs: release
+  publish-apt-package:
+    needs: build-and-release
     permissions:
       contents: write
     
     uses: ./.github/workflows/publish_apt_repo.yml
     with:
-      deb_path: ${{ needs.release.outputs.deb_filename }}
+      deb_path: ${{ needs.build-and-release.outputs.deb_filename }}
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
       GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}

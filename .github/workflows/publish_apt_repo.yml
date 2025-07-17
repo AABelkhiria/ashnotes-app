@@ -73,7 +73,7 @@ jobs:
           gpg --default-key ${{ steps.gpg.outputs.key_id }} --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" --clearsign -o InRelease Release
           gpg --default-key ${{ steps.gpg.outputs.key_id }} --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" -abs -o Release.gpg Release
 
-      - name: Deploy signed repository to GitHub Pages
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
