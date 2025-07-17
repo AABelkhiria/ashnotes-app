@@ -1,0 +1,15 @@
+Origin: AABelkhiria
+Label: AABelkhiria/ashnotes-app
+Suite: stable
+Codename: stable
+Version: 1.0
+Architectures: amd64
+Components: main
+Description: APT repository for AABelkhiria/ashnotes-app
+Date: Thu, 17 Jul 2025 14:00:49 +0000
+MD5Sum:
+ b3746e3fc2b70cd4a3ee4541333e5f40 405 main/binary-amd64/Packages
+ 05c155e456d5b4d22c41da1fec3ee37b 315 main/binary-amd64/Packages.gz
+SHA256:
+ 8702fadc22c2bd59ccce11b5b8d34ae5075b5c6d94df4fe0d951a3f280c69911 405 main/binary-amd64/Packages
+ f7ad04ed2a60daad4a769f35c1733e2ef4cfa1e02505fccbf89ce8e94a7e219d 315 main/binary-amd64/Packages.gz

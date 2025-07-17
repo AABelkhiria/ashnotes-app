@@ -1,0 +1,34 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Origin: AABelkhiria
+Label: AABelkhiria/ashnotes-app
+Suite: stable
+Codename: stable
+Version: 1.0
+Architectures: amd64
+Components: main
+Description: APT repository for AABelkhiria/ashnotes-app
+Date: Thu, 17 Jul 2025 14:00:49 +0000
+MD5Sum:
+ b3746e3fc2b70cd4a3ee4541333e5f40 405 main/binary-amd64/Packages
+ 05c155e456d5b4d22c41da1fec3ee37b 315 main/binary-amd64/Packages.gz
+SHA256:
+ 8702fadc22c2bd59ccce11b5b8d34ae5075b5c6d94df4fe0d951a3f280c69911 405 main/binary-amd64/Packages
+ f7ad04ed2a60daad4a769f35c1733e2ef4cfa1e02505fccbf89ce8e94a7e219d 315 main/binary-amd64/Packages.gz
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEK5ic9nCoqCLz5Iyg63CBTcJwrWQFAmh5AhEACgkQ63CBTcJw
+rWTtnQ//Xjrj5TkEp0iPWKfSqEJ0hI0AHVrbVM+nKcxqW6xchurUy0oHo1NB+HRK
+oJzTD2lHQVBY5I2El3CYS5DiDNAI+ESmFnQZoxeiemo0UwEIwxlzt7UYyBaZNA+/
+wqF4yXTaSJKYFAJ2wABvekIXsjGZeWWwenDvowZ+2I42XqUVTPDmp9Iy2k9pEJ7S
+jcdwjr1XNS6QRnJ+/qs28LIIWAzlhI3gnocVOPOEWfe2EVUEBKImVUBliJDhbbF4
+UErToSBWiQDs06jtTf8LNpgzJgy2s5L82xnYMqnHCE0QM6lp1IJK5OM4u7rlraiA
+Qjtwhp6Wj5s9CgA5+fZr6IAhnY+Ag2CdStH6MXmwLkXwlQRMEdyif28yKkSi81bM
+tjTVfK6dlzpA42T0wbK/rMIvG0lPfdAWDhNg17+znQqpBN+Kc+/E+8GB2pCrfg+Z
+nDzpKjgw7xwZ8MvNuabh4N469rI9oi2biWxvjxX/aSvzEZxQVwMEpqRtg2S2ceqM
+2EVYOOmFUQpHCpdAnhUsRD6GeHFpZoPWu/XYRV0LxGa4feG9oHQ/v4V2MAxJzW/O
+Nbghfm70WFqLwgEOi7TGnJbGQslYx4bgMdOoJmb0XkTS535KFSaTVqQKropr9gd3
+LU+HxBVyTTLVnlWy17q8UIME1zBR2AtZIhvP3Ro8Z/b13HdVDH0=
+=p6tN
+-----END PGP SIGNATURE-----
