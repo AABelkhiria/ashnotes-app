@@ -57,3 +57,12 @@ This project uses a `Makefile` to manage common tasks. Here are some of the most
 ## Documentation
 
 For more detailed documentation, please see the [docs](./docs) directory.
+
+## Continuous Deployment
+
+This project uses a GitHub Actions workflow to automate the release process. When a commit is pushed to the `main` branch, the following steps are executed:
+
+1.  **Versioning**: The workflow determines the new version number based on the current date and the latest git tag. The versioning scheme is `YY.MM.minor`, where `YY` is the year, `MM` is the month, and `minor` is an incremental number that resets to `1` each month.
+2.  **Build**: The desktop application is built, generating a `.deb` package.
+3.  **Release**: A new GitHub Release is created with the new version number as the tag.
+4.  **Upload**: The generated `.deb` package is uploaded as an asset to the new release.
