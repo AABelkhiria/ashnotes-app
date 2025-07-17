@@ -48,7 +48,8 @@ jobs:
         id: get_latest_tag
         uses: actions-ecosystem/action-get-latest-tag@v1
         with:
-          fallback: 0.0.0 
+          with_initial_version: true
+          initial_version: 0.0.0
 
       - name: Calculate new version
         id: versioning
