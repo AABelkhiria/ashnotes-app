@@ -32,9 +32,9 @@ RUN groupadd --gid ${GROUP_GID} runner \
 USER runner
 
 # Install Rust and Cargo using rustup
-ENV RUSTUP_HOME=/usr/local/rustup \
-    CARGO_HOME=/usr/local/cargo \
-    PATH=/usr/local/cargo/bin:$PATH
+ENV RUSTUP_HOME=/home/runner/.rustup \
+    CARGO_HOME=/home/runner/.cargo \
+    PATH=/home/runner/.cargo/bin:$PATH
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
 
 # Install the Tauri CLI using Cargo

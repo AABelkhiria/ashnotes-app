@@ -50,6 +50,9 @@ jobs:
         id: repo-owner
         run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and Push Image
         uses: docker/build-push-action@v5
         with:
@@ -59,3 +62,5 @@ jobs:
           tags: |
             ghcr.io/${{ steps.repo-owner.outputs.owner }}/tauri-build-env:latest
             ghcr.io/${{ steps.repo-owner.outputs.owner }}/tauri-build-env:${{ steps.versioning.outputs.new_version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
