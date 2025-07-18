@@ -97,12 +97,12 @@ To install the application from the APT repository hosted on GitHub Pages, follo
 
 1.  **Add the repository to your APT sources:**
     ```bash
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/ashnotes-app-archive-keyring.gpg] https://AABelkhiria.github.io/ashnotes-app/ ./ " | sudo tee /etc/apt/sources.list.d/ashnotes-app.list > /dev/null
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/ashnotes-app-archive-keyring.gpg] https://AABelkhiria.github.io/ashnotes-app/ stable main" | sudo tee /etc/apt/sources.list.d/ashnotes-app.list
     ```
 
 2.  **Download and import the GPG public key:**
     ```bash
-    sudo wget -O /usr/share/keyrings/ashnotes-app-archive-keyring.gpg https://AABelkhiria.github.io/ashnotes-app/public.key
+    wget -qO- https://AABelkhiria.github.io/ashnotes-app/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/ashnotes-app-archive-keyring.gpg > /dev/null
     ```
 
 3.  **Update your APT package list:**
