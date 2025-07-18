@@ -5,10 +5,10 @@ Maintainer: my-app
 Installed-Size: 13915
 Depends: libwebkit2gtk-4.1-0, libgtk-3-0
 Filename: pool/main/ashnotes_25.7.1_amd64.deb
-Size: 4850810
-MD5sum: 94b66c9966a0c1e6f8dbdf7470825dc5
-SHA1: 85900372d77cd51510a07cb6fb14fef91ff93735
-SHA256: 76ff014e1acae8e95cc33f98e4cb5e702531cd61c86ee42358d803337778eb08
+Size: 4850532
+MD5sum: aebd78ad9931209b46afdbb4d0e49b1f
+SHA1: 1c40be4eed41d55bfea971c9bb8b97c7e1f44730
+SHA256: 765e13e7b3d28f4b3de9c7081da8a6ff186a98aec2f1f13f015de4f57d558a07
 Priority: optional
 Description: (none)
  (none)
