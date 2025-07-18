@@ -48,6 +48,7 @@ jobs:
       - name: Get latest tag by version number
         id: get_latest_tag
         run: |
+          git config --global --add safe.directory ${{ github.workspace }}
           latest_tag=$(git tag --sort=-version:refname | head -n 1)
           echo "tag=${latest_tag}" >> $GITHUB_OUTPUT
 
