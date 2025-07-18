@@ -24,6 +24,9 @@ jobs:
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
+
       - name: Get latest Docker image tag from GHCR and increment version
         id: versioning
         run: |
