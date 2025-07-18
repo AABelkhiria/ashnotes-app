@@ -5,6 +5,10 @@ LABEL org.opencontainers.image.source="https://github.com/AABelkhiria/ashnotes-a
 LABEL org.opencontainers.image.description="Build environment for the AshNotes Tauri app. Includes Rust, Node.js, Tauri CLI, and all system dependencies for a .deb package build."
 LABEL org.opencontainers.image.licenses="MIT"
 
+# Arguments for user and group IDs, defaulted for GitHub Actions runners
+ARG USER_UID=1001
+ARG GROUP_GID=127
+
 # Set environment variables to non-interactive to prevent prompts during build
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -20,6 +24,12 @@ RUN apt-get update && apt-get install -y \
     librsvg2-dev \
     jq \
     && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd --gid ${GROUP_GID} runner \
+    && useradd --uid ${USER_UID} --gid ${GROUP_GID} --create-home --shell /bin/bash runner
+
+# Switch to the non-root user
+USER runner
 
 # Install Rust and Cargo using rustup
 ENV RUSTUP_HOME=/usr/local/rustup \
