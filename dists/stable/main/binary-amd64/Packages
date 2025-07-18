@@ -1,14 +1,14 @@
 Package: ashnotes
-Version: 25.7.6
+Version: 25.7.7
 Architecture: amd64
 Maintainer: my-app
 Installed-Size: 13921
 Depends: libwebkit2gtk-4.1-0, libgtk-3-0
-Filename: pool/main/ashnotes_25.7.6_amd64.deb
-Size: 4849206
-MD5sum: 23d4786927b12eb2a268077496e19671
-SHA1: 6da0bde8d97da3fcb25f49c2c66e5945aa6eca3e
-SHA256: ea2996648ba6534a451c6ec67daf269d3eb4475dc1f7143b690939f3cda11f37
+Filename: pool/main/ashnotes_25.7.7_amd64.deb
+Size: 4849730
+MD5sum: 31a9d7fad05bd782891da9fb4c934247
+SHA1: 9202d68a44fa9b8445cfd57d26ba92814c33d22b
+SHA256: b259ad5c1bda4bb2612b89fb12bc4f2893ea012538db192bc0e7a74acb0d26e0
 Priority: optional
 Description: (none)
  (none)
