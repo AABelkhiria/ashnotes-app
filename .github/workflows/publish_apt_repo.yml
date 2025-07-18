@@ -19,13 +19,20 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: write 
+      contents: write
+
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: deb-package
           path: .
+
+      - name: Checkout existing gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: 'gh-pages'
+          path: 'repo'
 
       - name: Set up GPG for APT repository signing
         id: gpg
@@ -35,20 +42,29 @@ jobs:
           echo "key_id=$GPG_KEY_ID" >> $GITHUB_OUTPUT
           gpg --armor --export "$GPG_KEY_ID" > public.key
 
-      - name: Create and sign the APT repository structure
+      - name: Update the APT repository structure
         run: |
+          # Create directory structure if it doesn't exist (for the first run)
           mkdir -p repo/pool/main
           mkdir -p repo/dists/stable/main/binary-amd64
 
-          # copy input
+          # Copy the new .deb package into the pool
           cp "./$(basename "./${{ inputs.deb_path }}")" "repo/pool/main/$(basename "./${{ inputs.deb_path }}")"
+          
+          # Copy public key
           cp public.key repo/
           
+          # Navigate into the repository directory
           cd repo
+
+          # Regenerate the Packages file, appending information for all .deb files
           dpkg-scanpackages pool/ > dists/stable/main/binary-amd64/Packages
-          gzip -9 < dists/stable/main/binary-amd64/Packages > dists/stable/main/binary-amd64/Packages.gz
+          gzip -9c < dists/stable/main/binary-amd64/Packages > dists/stable/main/binary-amd64/Packages.gz
           
+          # Navigate to the dists/stable directory to create the Release file
           cd dists/stable
+          
+          # Generate the Release file
           cat > Release <<EOF
           Origin: ${{ github.repository_owner }}
           Label: ${{ github.repository }}
@@ -67,6 +83,7 @@ jobs:
            $(sha256sum main/binary-amd64/Packages.gz | cut -d' ' -f1) $(stat -c%s main/binary-amd64/Packages.gz) main/binary-amd64/Packages.gz
           EOF
           
+          # Sign the Release file
           gpg --default-key ${{ steps.gpg.outputs.key_id }} --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" --clearsign -o InRelease Release
           gpg --default-key ${{ steps.gpg.outputs.key_id }} --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" -abs -o Release.gpg Release
 
