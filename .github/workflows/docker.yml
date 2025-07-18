@@ -29,28 +29,41 @@ jobs:
         run: |
           package="aabelkhiria/tauri-build-env"
           current_date=$(date +'%y.%m')
-          # Fetch tags from GHCR
-          tags=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://ghcr.io/v2/${package}/tags/list" | jq -r '.tags[]' | grep -E '^[0-9]{2}\.[0-9]{2}\.[0-9]+$' || true)
-          echo "tags=$tags"
-          # Get latest tag for current month
-          latest_tag=$(echo "$tags" | grep "^$current_date\." | sort -V | tail -n 1)
-          if [ -n "$latest_tag" ]; then
-            minor_version=$(echo "$latest_tag" | cut -d. -f3)
-            new_minor=$((minor_version + 1))
-            new_version="$current_date.$new_minor"
+          echo "Current date (YY.MM): ${current_date}"
+
+          # Get the latest version tag, ignoring "latest". Fallback to "0.0.0" if no tags exist.
+          latest_tag=$(skopeo list-tags "docker://ghcr.io/${package}" | jq -r '.Tags[]' | grep -v "latest" | sort -V | tail -n 1 || echo "0.0.0")
+          echo "Latest tag found: ${latest_tag}"
+
+          # Extract the date part (YY.MM) from the latest tag
+          tag_date=$(echo "$latest_tag" | cut -d. -f1,2)
+          echo "Date from latest tag: ${tag_date}"
+
+          # Check if the latest tag is from the current month
+          if [ "$tag_date" == "$current_date" ]; then
+            # SAME MONTH: Increment the patch number
+            echo "Latest tag is from the current month. Incrementing patch number."
+            patch_version=$(echo "$latest_tag" | cut -d. -f3)
+            new_patch=$((patch_version + 1))
+            new_version="${current_date}.${new_patch}"
           else
-            new_version="$current_date.1"
+            # NEW MONTH or FIRST RUN: Reset the patch number to 1
+            echo "This is a new month or the first run. Resetting patch number to 1."
+            new_version="${current_date}.1"
           fi
-          echo "latest_tag=$latest_tag"
-          echo "new_version=$new_version"
-          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
+          # Output the new version for subsequent steps
+          echo "New version determined: ${new_version}"
+          echo "new_version=${new_version}" >> $GITHUB_OUTPUT
 
       - name: Set lowercase repo owner
         id: repo-owner
         run: echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
-      - name: Build and push Docker image
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -59,3 +72,5 @@ jobs:
           tags: |
             ghcr.io/${{ steps.repo-owner.outputs.owner }}/tauri-build-env:latest
             ghcr.io/${{ steps.repo-owner.outputs.owner }}/tauri-build-env:${{ steps.versioning.outputs.new_version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
