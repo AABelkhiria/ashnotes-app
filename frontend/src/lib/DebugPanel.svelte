@@ -1,6 +1,7 @@
 <script lang="ts">
     import { logs } from './logStore';
     import { onMount } from 'svelte';
+    import Icon from './Icon.svelte';
 
     let showLogs = false;
     let logContainer: HTMLElement;
@@ -20,7 +21,7 @@
 
 <div class="debug-panel-container">
     <button class="debug-toggle-button" on:click={() => (showLogs = !showLogs)}>
-        {showLogs ? 'Hide Logs' : 'Show Logs'}
+        <Icon name="bug" />
     </button>
 
     {#if showLogs}
@@ -41,17 +42,13 @@
     }
 
     .debug-toggle-button {
-        background-color: #4CAF50; /* Green */
+        background: none;
         border: none;
-        color: white;
-        padding: 10px 15px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 14px;
-        margin: 4px 2px;
         cursor: pointer;
-        border-radius: 5px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        margin: 4px 2px;
     }
 
     .log-display {

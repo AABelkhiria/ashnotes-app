@@ -49,9 +49,9 @@
 			</h2>
 		</div>
 		<div class="note-actions">
-			<button on:click={() => onSave(content)}>Save</button>
+			<button class="icon-button" on:click={() => onSave(content)}><Icon name="save" /></button>
 			{#if !isCreating}
-				<button on:click={onDelete} class="delete-button">Delete</button>
+				<button class="icon-button delete-button" on:click={onDelete}><Icon name="trash" /></button>
 			{/if}
 		</div>
 	</div>
@@ -156,20 +156,5 @@
 		gap: 1rem;
 	}
 
-	.note-editor button {
-		padding: 0.5rem 1rem;
-		border-radius: 8px;
-		font-weight: 500;
-		transition:
-			background-color 0.2s ease-in-out,
-			transform 0.1s ease-in-out;
-	}
-
-	.note-editor button.delete-button {
-		background-color: #dc3545;
-	}
-
-	.note-editor button.delete-button:hover {
-		background-color: #c82333;
-	}
+	
 </style>
