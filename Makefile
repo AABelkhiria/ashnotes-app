@@ -12,7 +12,7 @@ BACKEND_DIR := backend
 WEB_APP_BINARY_NAME := web-app
 WEB_APP_COMPILED_BINARY_RELEASE := $(BACKEND_DIR)/target/release/$(WEB_APP_BINARY_NAME)
 
-DESKTOP_APP_BINARY_NAME := desktop-app
+DESKTOP_APP_BINARY_NAME := ashnotes
 DESKTOP_APP_COMPILED_BINARY_RELEASE := $(BACKEND_DIR)/target/release/$(DESKTOP_APP_BINARY_NAME)
 
 # ==============================================================================

@@ -7,6 +7,7 @@
 	import { checkInitializedApi } from '$lib/api';
 	import { isSidebarCollapsed } from '$lib/sidebarStore';
 	import Icon from '$lib/Icon.svelte';
+	import DebugPanel from '$lib/DebugPanel.svelte';
 
 	let isHovered = false;
 	let hoverTimeout: number;
@@ -70,6 +71,7 @@
 	<main class="content">
 		<slot />
 	</main>
+	<DebugPanel />
 </div>
 
 <style>

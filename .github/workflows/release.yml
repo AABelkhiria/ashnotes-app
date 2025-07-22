@@ -34,6 +34,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
@@ -81,6 +82,11 @@ jobs:
       - name: Update version in tauri.conf.json
         run: |
           jq --arg new_version "${{ steps.versioning.outputs.new_version }}" '.version = $new_version' backend/desktop-app/tauri.conf.json > tmp.json && mv tmp.json backend/desktop-app/tauri.conf.json
+      
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
 
       - name: Build the application
         run: make build-desktop

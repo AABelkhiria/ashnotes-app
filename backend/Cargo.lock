@@ -103,6 +103,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
 
 [[package]]
+name = "ashnotes"
+version = "25.7.0"
+dependencies = [
+ "anyhow",
+ "dotenvy",
+ "log",
+ "serde",
+ "serde_json",
+ "services",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-log",
+ "tauri-plugin-store",
+ "thiserror 1.0.69",
+ "tokio",
+]
+
+[[package]]
 name = "async-recursion"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -725,24 +743,6 @@ dependencies = [
  "quote",
  "rustc_version",
  "syn 2.0.104",
-]
-
-[[package]]
-name = "desktop-app"
-version = "1.0.0"
-dependencies = [
- "anyhow",
- "dotenvy",
- "log",
- "serde",
- "serde_json",
- "services",
- "tauri",
- "tauri-build",
- "tauri-plugin-log",
- "tauri-plugin-store",
- "thiserror 1.0.69",
- "tokio",
 ]
 
 [[package]]

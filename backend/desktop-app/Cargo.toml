@@ -1,6 +1,6 @@
 [package]
-name = "desktop-app"
-version = "1.0.0"
+name = "ashnotes"
+version = "25.7.0"
 edition = "2024"
 
 [dependencies]

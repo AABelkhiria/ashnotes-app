@@ -1,0 +1,14 @@
+[Unit]
+Description=AshNotes Application
+
+# These targets correctly hook the app into your graphical login session
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+# Path to your application executable
+ExecStart=/usr/bin/ashnotes
+
+[Install]
+# This enables the service to start when your graphical session starts
+WantedBy=graphical-session.target

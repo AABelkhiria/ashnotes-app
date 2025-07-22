@@ -3,7 +3,7 @@
 use services::github_service::{GitHubService, GitHubServiceError, Note};
 use std::sync::Mutex;
 
-use log::{error, info, warn};
+use log::{error, info};
 use tauri_plugin_log::TimezoneStrategy;
 
 // --- State Management ---
@@ -51,12 +51,7 @@ impl AppState {
         let name = repo_parts[1].to_string();
 
         // 3. Create and return the service.
-        Ok(GitHubService::new(
-            github_token,
-            owner,
-            name,
-            app_identifier,
-        ))
+        Ok(GitHubService::new(github_token, owner, name, app_identifier))
     }
 }
 
@@ -73,7 +68,7 @@ fn set_credentials(
     notes_repo: String,
     app_identifier: String,
 ) -> Result<(), String> {
-    info!("Setting credentials: {}, {}, {}", github_token, notes_repo, app_identifier);
+    info!("Setting credentials: ***, {}, {}", notes_repo, app_identifier);
     let mut initialized = state.initialized.lock().unwrap();
     *state.github_token.lock().unwrap() = Some(github_token);
     *state.notes_repo.lock().unwrap() = Some(notes_repo);
@@ -94,10 +89,7 @@ async fn list_notes(state: tauri::State<'_, AppState>) -> Result<Vec<Note>, GitH
 }
 
 #[tauri::command]
-async fn get_note(
-    state: tauri::State<'_, AppState>,
-    path: String,
-) -> Result<Option<Note>, GitHubServiceError> {
+async fn get_note(state: tauri::State<'_, AppState>, path: String) -> Result<Option<Note>, GitHubServiceError> {
     info!("Getting note at path: {}", path);
     let service = state.get_service()?;
     service
@@ -112,6 +104,7 @@ async fn create_note(
     path: String,
     content: String,
 ) -> Result<(), GitHubServiceError> {
+    info!("Creating note at path: {}", path);
     let service = state.get_service()?;
     service
         .create_note(&path, &content)
@@ -125,6 +118,7 @@ async fn update_note(
     path: String,
     content: String,
 ) -> Result<(), GitHubServiceError> {
+    info!("Updating note at path: {}", path);
     let service = state.get_service()?;
     service
         .update_note(&path, &content)
@@ -133,15 +127,18 @@ async fn update_note(
 }
 
 #[tauri::command]
-async fn delete_note(
-    state: tauri::State<'_, AppState>,
-    path: String,
-) -> Result<(), GitHubServiceError> {
+async fn delete_note(state: tauri::State<'_, AppState>, path: String) -> Result<(), GitHubServiceError> {
+    info!("Deleting note at path: {}", path);
     let service = state.get_service()?;
     service
         .delete_note(&path)
         .await
         .map_err(|e| GitHubServiceError::Anyhow(e.to_string()))
+}
+
+#[tauri::command]
+fn log_message(message: String) {
+    info!("[Frontend] {}", message);
 }
 
 // --- Main Function (unchanged) ---
@@ -158,11 +155,27 @@ fn main() {
             tauri_plugin_log::Builder::default()
                 // .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
                 .timezone_strategy(TimezoneStrategy::UseLocal)
-                .level(log::LevelFilter::Debug)
+                .level(log::LevelFilter::Info)
+                .level_for("octocrab", log::LevelFilter::Info)
+                .level_for("hyper", log::LevelFilter::Info)
+                .level_for("rustls", log::LevelFilter::Info)
+                .level_for("hyper_rustls", log::LevelFilter::Info)
+                .level_for("tower", log::LevelFilter::Info)
+                .level_for("hyper_util", log::LevelFilter::Info)
                 .build(),
         )
         .setup(|_app| {
-            info!("Tauri server is starting up");
+            // Log the current executable path
+            match std::env::current_exe() {
+                Ok(exe_path) => info!("Current executable path: {:?}", exe_path),
+                Err(e) => error!("Failed to get current executable path: {}", e),
+            }
+            // Log the current working directory
+            match std::env::current_dir() {
+                Ok(current_dir) => info!("Current working directory: {:?}", current_dir),
+                Err(e) => error!("Failed to get current working directory: {}", e),
+            }
+            info!("Tauri server v{} is starting up", env!("CARGO_PKG_VERSION"));
             Ok(())
         })
         .manage(app_state)
@@ -173,7 +186,8 @@ fn main() {
             get_note,
             create_note,
             update_note,
-            delete_note
+            delete_note,
+            log_message
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
