@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use services::github_service::{GitHubService, GitHubServiceError, Note};
+use services::note_service::{Note, NoteService, NoteServiceError};
 use std::sync::Mutex;
 
 use log::{error, info};
@@ -15,23 +15,23 @@ struct AppState {
 }
 
 impl AppState {
-    /// Creates a GitHubService instance from the current state.
-    fn get_service(&self) -> Result<GitHubService, GitHubServiceError> {
-        info!("Creating GitHubService from state");
+    /// Creates a NoteService instance from the current state.
+    fn get_service(&self) -> Result<NoteService, NoteServiceError> {
+        info!("Creating NoteService from state");
         // 1. Lock mutexes and extract credentials.
         let github_token = self
             .github_token
             .lock()
             .unwrap()
             .clone()
-            .ok_or_else(|| GitHubServiceError::Anyhow("GitHub token not set".to_string()))?;
+            .ok_or_else(|| NoteServiceError::Anyhow("GitHub token not set".to_string()))?;
 
         let notes_repo = self
             .notes_repo
             .lock()
             .unwrap()
             .clone()
-            .ok_or_else(|| GitHubServiceError::Anyhow("Notes repo not set".to_string()))?;
+            .ok_or_else(|| NoteServiceError::Anyhow("Notes repo not set".to_string()))?;
 
         let app_identifier = self
             .app_identifier
@@ -40,18 +40,8 @@ impl AppState {
             .clone()
             .unwrap_or_else(|| "NoteApp".to_string());
 
-        // 2. Parse the repo string.
-        let repo_parts: Vec<&str> = notes_repo.split('/').collect();
-        if repo_parts.len() != 2 {
-            return Err(GitHubServiceError::Anyhow(
-                "Invalid NOTES_REPO format. Expected 'owner/name'".to_string(),
-            ));
-        }
-        let owner = repo_parts[0].to_string();
-        let name = repo_parts[1].to_string();
-
-        // 3. Create and return the service.
-        Ok(GitHubService::new(github_token, owner, name, app_identifier))
+        // 2. Create and return the service.
+        NoteService::new(github_token, notes_repo, app_identifier)
     }
 }
 
@@ -68,7 +58,7 @@ fn set_credentials(
     notes_repo: String,
     app_identifier: String,
 ) -> Result<(), String> {
-    info!("Setting credentials: ***, {}, {}", notes_repo, app_identifier);
+    info!("Setting credentials: {}, {}", notes_repo, app_identifier);
     let mut initialized = state.initialized.lock().unwrap();
     *state.github_token.lock().unwrap() = Some(github_token);
     *state.notes_repo.lock().unwrap() = Some(notes_repo);
@@ -78,62 +68,54 @@ fn set_credentials(
 }
 
 #[tauri::command]
-async fn list_notes(state: tauri::State<'_, AppState>) -> Result<Vec<Note>, GitHubServiceError> {
+async fn list_notes(state: tauri::State<'_, AppState>) -> Result<Vec<Note>, NoteServiceError> {
     info!("Listing all notes");
     let service = state.get_service()?;
     info!("Fetching all notes from service");
     service
         .get_all_notes()
         .await
-        .map_err(|e| GitHubServiceError::Anyhow(e.to_string()))
+        .map_err(|e| NoteServiceError::Anyhow(e.to_string()))
 }
 
 #[tauri::command]
-async fn get_note(state: tauri::State<'_, AppState>, path: String) -> Result<Option<Note>, GitHubServiceError> {
+async fn get_note(state: tauri::State<'_, AppState>, path: String) -> Result<Option<Note>, NoteServiceError> {
     info!("Getting note at path: {}", path);
     let service = state.get_service()?;
     service
         .get_note(&path)
         .await
-        .map_err(|e| GitHubServiceError::Anyhow(e.to_string()))
+        .map_err(|e| NoteServiceError::Anyhow(e.to_string()))
 }
 
 #[tauri::command]
-async fn create_note(
-    state: tauri::State<'_, AppState>,
-    path: String,
-    content: String,
-) -> Result<(), GitHubServiceError> {
+async fn create_note(state: tauri::State<'_, AppState>, path: String, content: String) -> Result<(), NoteServiceError> {
     info!("Creating note at path: {}", path);
     let service = state.get_service()?;
     service
         .create_note(&path, &content)
         .await
-        .map_err(|e| GitHubServiceError::Anyhow(e.to_string()))
+        .map_err(|e| NoteServiceError::Anyhow(e.to_string()))
 }
 
 #[tauri::command]
-async fn update_note(
-    state: tauri::State<'_, AppState>,
-    path: String,
-    content: String,
-) -> Result<(), GitHubServiceError> {
+async fn update_note(state: tauri::State<'_, AppState>, path: String, content: String) -> Result<(), NoteServiceError> {
     info!("Updating note at path: {}", path);
     let service = state.get_service()?;
     service
         .update_note(&path, &content)
         .await
-        .map_err(|e| GitHubServiceError::Anyhow(e.to_string()))
+        .map_err(|e| NoteServiceError::Anyhow(e.to_string()))
 }
 
 #[tauri::command]
-async fn delete_note(state: tauri::State<'_, AppState>, path: String) -> Result<(), GitHubServiceError> {
+async fn delete_note(state: tauri::State<'_, AppState>, path: String) -> Result<(), NoteServiceError> {
     info!("Deleting note at path: {}", path);
     let service = state.get_service()?;
     service
         .delete_note(&path)
         .await
-        .map_err(|e| GitHubServiceError::Anyhow(e.to_string()))
+        .map_err(|e| NoteServiceError::Anyhow(e.to_string()))
 }
 
 #[tauri::command]

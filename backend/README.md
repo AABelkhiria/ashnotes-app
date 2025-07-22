@@ -21,7 +21,6 @@ When a new category (directory) is created, a `README.md` file is automatically 
 
 All API endpoints require the following headers:
 
--   `GITHUB_TOKEN`: Your GitHub personal access token.
 -   `NOTES_REPO`: The owner and name of the repository for storing notes (e.g., `owner/repo`).
 -   `APP_IDENTIFIER`: An identifier for the application making the changes.
 

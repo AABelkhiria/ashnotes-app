@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"dev:desktop": "vite --mode desktop",
-		"build": "vite build",
+		"build": "VITE_BUILD_TARGET=web vite build",
 		"build:desktop": "VITE_BUILD_TARGET=desktop vite build --mode desktop",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",

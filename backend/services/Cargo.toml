@@ -1,14 +1,13 @@
 [package]
 name = "services"
-version = "1.0.0"
+version = "25.7.0"
 edition = "2021"
 
 [dependencies]
+github-service = { git = "https://github.com/AABelkhiria/github-service-rs.git", branch = "main" }
 serde = { version = "1", features = ["derive"] }
 octocrab = "0.44"
-dotenvy = "0.15"
-async-recursion = "1.1.1"
-futures = "0.3.31"
-anyhow = "1.0.98"
-thiserror = "2.0.12"
-tokio = { version = "1", features = ["full"] }
+async-recursion = "1.1"
+futures = "0.3"
+anyhow = "1"
+thiserror = "2.0"

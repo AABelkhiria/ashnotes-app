@@ -1,17 +1,17 @@
 use axum::{
-    extract::{Path, FromRequestParts},
     async_trait,
-    Json, Router,
     body::Body,
-    http::{request::Parts, StatusCode, Uri, header},
+    extract::{FromRequestParts, Path},
+    http::{header, request::Parts, StatusCode, Uri},
     response::{IntoResponse, Response},
     routing::get,
+    Json, Router,
 };
 use serde::Deserialize;
 use std::sync::Arc;
 use tower_http::cors::{Any, CorsLayer};
 
-use services::github_service::{GitHubService, GitHubServiceError, Note};
+use services::note_service::{Note, NoteService, NoteServiceError};
 
 use rust_embed::Embed;
 
@@ -56,21 +56,19 @@ async fn static_handler(uri: Uri) -> impl IntoResponse {
                 .body(Body::from(content.data))
                 .unwrap()
         }
-        None => {
-            match Assets::get("index.html") {
-                Some(content) => {
-                    let mime = mime_guess::from_path("index.html").first_or_octet_stream();
-                    Response::builder()
-                        .header(header::CONTENT_TYPE, mime.as_ref())
-                        .body(Body::from(content.data))
-                        .unwrap()
-                }
-                None => Response::builder()
-                    .status(StatusCode::NOT_FOUND)
-                    .body(Body::from("404 Not Found"))
-                    .unwrap(),
+        None => match Assets::get("index.html") {
+            Some(content) => {
+                let mime = mime_guess::from_path("index.html").first_or_octet_stream();
+                Response::builder()
+                    .header(header::CONTENT_TYPE, mime.as_ref())
+                    .body(Body::from(content.data))
+                    .unwrap()
             }
-        }
+            None => Response::builder()
+                .status(StatusCode::NOT_FOUND)
+                .body(Body::from("404 Not Found"))
+                .unwrap(),
+        },
     }
 }
 
@@ -117,30 +115,26 @@ where
     }
 }
 
-fn get_github_service(headers: &ApiHeaders) -> GitHubService {
-    let repo_parts: Vec<&str> = headers.notes_repo.split('/').collect();
-    let owner = repo_parts.first().unwrap_or(&"").to_string();
-    let name = repo_parts.get(1).unwrap_or(&"").to_string();
-    GitHubService::new(headers.github_token.clone(), owner, name, headers.app_identifier.clone())
+fn get_note_service(headers: &ApiHeaders) -> Result<NoteService, NoteServiceError> {
+    NoteService::new(
+        headers.github_token.clone(),
+        headers.notes_repo.clone(),
+        headers.app_identifier.clone(),
+    )
 }
 
-async fn list_notes(
-    headers: ApiHeaders,
-) -> Result<Json<Vec<Note>>, impl IntoResponse> {
-    let github_service = get_github_service(&headers);
-    github_service
+async fn list_notes(headers: ApiHeaders) -> Result<Json<Vec<Note>>, impl IntoResponse> {
+    let note_service = get_note_service(&headers).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    note_service
         .get_all_notes()
         .await
         .map(Json)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
-async fn get_note(
-    headers: ApiHeaders,
-    Path(path): Path<String>,
-) -> Result<Json<Note>, impl IntoResponse> {
-    let github_service = get_github_service(&headers);
-    match github_service.get_note(&path).await {
+async fn get_note(headers: ApiHeaders, Path(path): Path<String>) -> Result<Json<Note>, impl IntoResponse> {
+    let note_service = get_note_service(&headers).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    match note_service.get_note(&path).await {
         Ok(Some(note)) => Ok(Json(note)),
         Ok(None) => Err((StatusCode::NOT_FOUND, "Note not found".to_string())),
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
@@ -153,14 +147,14 @@ struct CreateNote {
     content: String,
 }
 
-async fn create_note(
-    headers: ApiHeaders,
-    Json(payload): Json<CreateNote>,
-) -> impl IntoResponse {
-    let github_service = get_github_service(&headers);
-    match github_service.create_note(&payload.path, &payload.content).await {
+async fn create_note(headers: ApiHeaders, Json(payload): Json<CreateNote>) -> impl IntoResponse {
+    let note_service = match get_note_service(&headers) {
+        Ok(service) => service,
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+    };
+    match note_service.create_note(&payload.path, &payload.content).await {
         Ok(_) => (StatusCode::CREATED, "Note created".to_string()),
-        Err(GitHubServiceError::NoteAlreadyExists) => {
+        Err(NoteServiceError::NoteAlreadyExists) => {
             (StatusCode::CONFLICT, "Note with this path already exists".to_string())
         }
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
@@ -177,19 +171,22 @@ async fn update_note(
     Path(path): Path<String>,
     Json(payload): Json<UpdateNote>,
 ) -> impl IntoResponse {
-    let github_service = get_github_service(&headers);
-    match github_service.update_note(&path, &payload.content).await {
+    let note_service = match get_note_service(&headers) {
+        Ok(service) => service,
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+    };
+    match note_service.update_note(&path, &payload.content).await {
         Ok(_) => (StatusCode::OK, "Note updated".to_string()),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
     }
 }
 
-async fn delete_note(
-    headers: ApiHeaders,
-    Path(path): Path<String>,
-) -> impl IntoResponse {
-    let github_service = get_github_service(&headers);
-    match github_service.delete_note(&path).await {
+async fn delete_note(headers: ApiHeaders, Path(path): Path<String>) -> impl IntoResponse {
+    let note_service = match get_note_service(&headers) {
+        Ok(service) => service,
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+    };
+    match note_service.delete_note(&path).await {
         Ok(_) => (StatusCode::OK, "Note deleted".to_string()),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
     }

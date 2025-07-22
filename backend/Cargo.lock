@@ -1298,6 +1298,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "github-service"
+version = "25.7.1"
+source = "git+https://github.com/AABelkhiria/github-service-rs.git?branch=main#5923f1493671893302bce1c92fdbf9ff3f567bd8"
+dependencies = [
+ "anyhow",
+ "futures",
+ "octocrab",
+ "serde",
+ "thiserror 2.0.12",
+]
+
+[[package]]
 name = "glib"
 version = "0.18.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3598,16 +3610,15 @@ dependencies = [
 
 [[package]]
 name = "services"
-version = "1.0.0"
+version = "25.7.0"
 dependencies = [
  "anyhow",
  "async-recursion",
- "dotenvy",
  "futures",
+ "github-service",
  "octocrab",
  "serde",
  "thiserror 2.0.12",
- "tokio",
 ]
 
 [[package]]
