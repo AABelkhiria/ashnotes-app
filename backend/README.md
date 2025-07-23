@@ -70,4 +70,8 @@ All API endpoints require the following headers:
     make run-backend
     ```
 
+### Environment Variables
+
+-   `DEBUG_BUILD`: Set to any value (e.g., `1` or `true`) to enable detailed logging for debugging purposes. If this variable is not set or is set to `0` or `false`, logging will be disabled.
+
 The application will be available at `http://0.0.0.0:3000`.

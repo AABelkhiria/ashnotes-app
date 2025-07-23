@@ -137,7 +137,11 @@ fn main() {
             tauri_plugin_log::Builder::default()
                 // .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
                 .timezone_strategy(TimezoneStrategy::UseLocal)
-                .level(log::LevelFilter::Info)
+                .level(if std::env::var("DEBUG_BUILD").is_ok() && std::env::var("DEBUG_BUILD").unwrap_or_default() != "0" {
+                    log::LevelFilter::Info
+                } else {
+                    log::LevelFilter::Off
+                })
                 .level_for("octocrab", log::LevelFilter::Info)
                 .level_for("hyper", log::LevelFilter::Info)
                 .level_for("rustls", log::LevelFilter::Info)

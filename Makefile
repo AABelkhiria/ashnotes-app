@@ -19,100 +19,115 @@ DESKTOP_APP_COMPILED_BINARY_RELEASE := $(BACKEND_DIR)/target/release/$(DESKTOP_A
 # High-Level Targets
 # ==============================================================================
 
-.PHONY: all
-all: build ## Build all applications
-
 .PHONY: build
-build: build-web build-desktop ## Build both web and desktop applications
+build: build-web-app build-desktop-app ## Build both web and desktop applications
+	@echo "✅ Full project build complete."
 
 .PHONY: install
-install: ## Install dependencies
-	make install-frontend
-	make install-backend
+install: install-frontend install-backend ## Install all dependencies
+	@echo "✅ All dependencies installed."
+
+.PHONY: clean
+clean: clean-frontend clean-backend ## Clean all build artifacts
+	@echo "✅ Full project clean complete."
+
+# ==============================================================================
+# Frontend Targets
+# ==============================================================================
 
 .PHONY: install-frontend
 install-frontend: ## Install frontend dependencies
 	@echo "Installing frontend dependencies..."
-	cd $(FRONTEND_DIR) && npm install
+	npm install --prefix $(FRONTEND_DIR)
+
+.PHONY: build-frontend
+build-frontend: install-frontend ## Build the user interface
+	@echo "Building frontend for web..."
+	DEBUG_BUILD=$(DEBUG_BUILD) npm --prefix $(FRONTEND_DIR) run build
+
+.PHONY: dev-frontend
+dev-frontend: ## Run the frontend development server
+	@echo "Starting frontend development server..."
+	npm --prefix $(FRONTEND_DIR) run dev
+
+.PHONY: clean-frontend
+clean-frontend: ## Clean frontend build artifacts
+	@echo "Cleaning frontend project..."
+	rm -rf $(FRONTEND_DIR)/build $(FRONTEND_DIR)/.svelte-kit $(FRONTEND_DIR)/node_modules
+
+# ==============================================================================
+# Backend Targets
+# ==============================================================================
 
 .PHONY: install-backend
 install-backend: ## Install backend dependencies
 	@echo "Installing backend dependencies..."
 	cargo install tauri-cli
 
+.PHONY: build-backend
+build-backend: build-web-app build-desktop-app ## Build both backend applications
+	@echo "✅ Backend build complete."
+
+.PHONY: test-backend
+test-backend: ## Run tests for the backend
+	@echo "Running tests for backend..."
+	@cd $(BACKEND_DIR) && cargo test --workspace
+
+.PHONY: clean-backend
+clean-backend: ## Clean backend build artifacts
+	@echo "Cleaning backend project..."
+	@cd $(BACKEND_DIR) && cargo clean
+
 # ==============================================================================
 # Web Application Targets
 # ==============================================================================
 
-.PHONY: build-web
-build-web: build-frontend build-web-app ## Build the complete web application
-
-.PHONY: build-frontend
-build-frontend:
-	@echo "Building frontend for web..."
-	cd $(FRONTEND_DIR) && npm run build
-
-.PHONY: run-frontend
-	@echo "Starting frontend development server..."
-	cd $(FRONTEND_DIR) && npm run dev
+.PHONY: build-web-app-debug
+build-web-app-debug:
+	@echo "Building web server (debug)..."
+	DEBUG_BUILD=true $(MAKE) build-frontend
+	cd $(BACKEND_DIR) && cargo build --release --bin web-app
 
 .PHONY: build-web-app
-build-web-app:
+build-web-app: build-frontend
 	@echo "Building web server..."
 	cd $(BACKEND_DIR) && cargo build --release --bin web-app
 
 .PHONY: run-web-app
 run-web-app:
 	@echo "Starting web server..."
-	@# Check if the compiled debug binary exists
 	@if [ -f "$(WEB_APP_COMPILED_BINARY_RELEASE)" ]; then \
 		echo "--> Found compiled binary, running it directly."; \
 		$(WEB_APP_COMPILED_BINARY_RELEASE); \
 	else \
 		echo "--> No compiled binary found, using 'cargo run' (will compile first)..."; \
-		cd $(BACKEND_DIR) && cargo run --bin $(BINARY_NAME); \
+		cd $(BACKEND_DIR) && cargo run --bin $(WEB_APP_BINARY_NAME); \
 	fi
-
-.PHONY: run-web-app-bg
-run-web-app-bg:
-	@echo "Starting web server in the background..."
-	cd $(BACKEND_DIR) && cargo run -p web-app &
 
 # ==============================================================================
 # Desktop Application Targets
 # ==============================================================================
 
-.PHONY: build-desktop
-build-desktop: ## Build the desktop application
+.PHONY: build-desktop-app-debug
+build-desktop-app-debug: ## Build the desktop application with debug features
+	@echo "Building desktop application with debug features..."
+	cd $(BACKEND_DIR) && DEBUG_BUILD=true cargo tauri build
+
+.PHONY: build-desktop-app
+build-desktop-app: ## Build the desktop application
 	@echo "Building desktop application..."
 	cd $(BACKEND_DIR) && cargo tauri build
 
-.PHONY: run-desktop
-run-desktop: ## Run the desktop application in development mode
+.PHONY: run-desktop-app
+run-desktop-app: ## Run the desktop application in development mode
 	@echo "Starting desktop application..."
-	@# Check if the compiled debug binary exists
 	@if [ -f "$(DESKTOP_APP_COMPILED_BINARY_RELEASE)" ]; then \
 		echo "--> Found compiled binary, running it directly."; \
 		$(DESKTOP_APP_COMPILED_BINARY_RELEASE); \
 	else \
-		echo "--> No compiled binary found, using 'cargo run' (will compile first)..."; \
+		echo "--> No compiled binary found, using 'cargo tauri dev' (will compile first)..."; \
 		cd $(BACKEND_DIR) && cargo tauri dev; \
 	fi
-
-# ==============================================================================
-# Shared Targets
-# ==============================================================================
-
-.PHONY: test
-test: ## Run tests for the backend
-	@echo "Running tests for backend..."
-	cd $(BACKEND_DIR) && cargo test --workspace
-
-.PHONY: clean
-clean: ## Clean all build artifacts
-	@echo "Cleaning project..."
-	cd $(FRONTEND_DIR) && rm -rf build .svelte-kit node_modules
-	cd $(BACKEND_DIR) && cargo clean
 
 # ==============================================================================
 # Help Target
@@ -121,6 +136,6 @@ clean: ## Clean all build artifacts
 .PHONY: help
 help: ## Show this help message
 	@echo "Usage: make [target]"
-	@echo ""
-	@echo "Targets:"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo "--------------------"
+	@echo "Available targets:"
+	@grep -E '^[a-zA-Z0-9_-]+:.*?##' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-25s\033[0m %s\n", $$1, $$2}'

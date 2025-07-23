@@ -8,6 +8,7 @@
 		"dev:desktop": "vite --mode desktop",
 		"build": "VITE_BUILD_TARGET=web vite build",
 		"build:desktop": "VITE_BUILD_TARGET=desktop vite build --mode desktop",
+		"build:desktop-debug": "VITE_BUILD_TARGET=desktop DEBUG_BUILD=true vite build --mode desktop",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",

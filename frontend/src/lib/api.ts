@@ -189,8 +189,8 @@ export async function log(message: string): Promise<void> {
     if (isDesktop) {
         const { invoke } = await import('@tauri-apps/api/core');
         await invoke('log_message', { message });
-    } else {
-        // In a browser environment, we can just log to the console.
+    } else if (import.meta.env.DEBUG_BUILD) {
+        // In a browser environment, we can just log to the console if debug build is enabled.
         console.log(message);
     }
 }
