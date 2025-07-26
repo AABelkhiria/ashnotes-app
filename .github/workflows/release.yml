@@ -89,7 +89,7 @@ jobs:
           workspaces: backend
 
       - name: Build the application
-        run: make build-desktop
+        run: make build-desktop-app
 
       - name: Find debian package
         id: find_deb
