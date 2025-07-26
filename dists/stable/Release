@@ -6,10 +6,10 @@ Version: 1.0
 Architectures: amd64
 Components: main
 Description: APT repository for AABelkhiria/ashnotes-app
-Date: Tue, 22 Jul 2025 07:54:21 +0000
+Date: Sat, 26 Jul 2025 21:42:39 +0000
 MD5Sum:
- da2ccb2b5cb7fb74099d094a8f2d0dc7 407 main/binary-amd64/Packages
- 19473c24fafca2c97dfc02ce7bc6b296 315 main/binary-amd64/Packages.gz
+ 04b8c0acd58551c455f9986a23b0c8a1 407 main/binary-amd64/Packages
+ 894d72bd5c638eec921e02f888d14068 314 main/binary-amd64/Packages.gz
 SHA256:
- e16acbcf88e2607c01ef7fd39befda590b25e202dd1644e9521439bd2fcae7dd 407 main/binary-amd64/Packages
- efbdc9909b62e0ad08b792c43a7613129186764f4146d0f2cfd97b5cf033e2c7 315 main/binary-amd64/Packages.gz
+ ee348aa05987a6c243d26346a8d6a5e8e3f6e35ad0356b69c88b40667668e63a 407 main/binary-amd64/Packages
+ 999ff9209b6fcea4163e97d7c54f17753de0916d8d6b15810a62a45423555888 314 main/binary-amd64/Packages.gz
