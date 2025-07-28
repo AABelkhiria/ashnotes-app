@@ -1,14 +1,14 @@
 Package: ashnotes
-Version: 25.7.18
+Version: 25.7.19
 Architecture: amd64
 Maintainer: my-app
-Installed-Size: 13973
-Depends: libwebkit2gtk-4.1-0, libgtk-3-0
-Filename: pool/main/ashnotes_25.7.18_amd64.deb
-Size: 4874318
-MD5sum: 5767e9e2a95b839f8a5c0b431bd55647
-SHA1: f8b683ef511007a8a2ec98ef74b2d19ae5408e97
-SHA256: c28119ea9ec445677dc0af073d26336d5a5409b4865d80705581198f3ed4dd92
+Installed-Size: 14257
+Depends: libayatana-appindicator3-1, libwebkit2gtk-4.1-0, libgtk-3-0
+Filename: pool/main/ashnotes_25.7.19_amd64.deb
+Size: 4992304
+MD5sum: e09340e190b76be2d27cbb3e16f9a7e3
+SHA1: 842f2214e52686a4b5fc4e2fe6560dfccc2b1974
+SHA256: cb67369bb84cecedd77b1f7214885b48a71a84bd8eae09500d111a7ba2b4a9d6
 Priority: optional
 Description: (none)
  (none)
