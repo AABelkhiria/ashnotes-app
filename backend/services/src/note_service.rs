@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use github_service::{GitHubService, GitHubServiceError};
 
-#[derive(Debug, thiserror::Error, serde::Serialize)]
+#[derive(Debug, thiserror::Error)]
 pub enum NoteServiceError {
     #[error("Note already exists")]
     NoteAlreadyExists,
@@ -39,6 +39,17 @@ pub struct Note {
     pub content: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub children: Option<Vec<Note>>,
+}
+
+#[derive(Deserialize)]
+pub struct CreateNote {
+    pub path: String,
+    pub content: String,
+}
+
+#[derive(Deserialize)]
+pub struct UpdateNote {
+    pub content: String,
 }
 
 pub struct NoteService {
@@ -150,19 +161,20 @@ impl NoteService {
         }
     }
 
-    pub async fn create_note(&self, path: &str, content: &str) -> Result<(), NoteServiceError> {
-        let full_path = format!("notes/{}", path);
+    pub async fn create_note(&self, payload: &CreateNote) -> Result<(), NoteServiceError> {
+        let full_path = format!("notes/{}", payload.path);
         if self.github_service.note_exists(&full_path).await? {
             return Err(NoteServiceError::NoteAlreadyExists);
         }
 
-        self.ensure_parent_directories_exist(path, content).await?;
+        self.ensure_parent_directories_exist(&payload.path, &payload.content)
+            .await?;
 
-        let is_readme = path.ends_with("README.md");
+        let is_readme = payload.path.ends_with("README.md");
         if !is_readme {
             let commit_message = format!("feat: create new note by {}", self.app_identifier);
             self.github_service
-                .create_file(&full_path, &commit_message, content)
+                .create_file(&full_path, &commit_message, &payload.content)
                 .await?;
         }
 
@@ -195,12 +207,12 @@ impl NoteService {
         Ok(())
     }
 
-    pub async fn update_note(&self, id: &str, content: &str) -> Result<(), NoteServiceError> {
+    pub async fn update_note(&self, id: &str, payload: &UpdateNote) -> Result<(), NoteServiceError> {
         let path = format!("notes/{}", id);
         let sha = self.github_service.get_sha(&path).await?;
         let commit_message = format!("feat: update note by {}", self.app_identifier);
         self.github_service
-            .update_file(&path, &commit_message, content, &sha)
+            .update_file(&path, &commit_message, &payload.content, &sha)
             .await?;
         Ok(())
     }

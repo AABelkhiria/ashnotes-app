@@ -5,9 +5,7 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use serde::Deserialize;
-
-use services::note_service::{Note, NoteService, NoteServiceError};
+use services::note_service::{CreateNote, Note, NoteService, NoteServiceError, UpdateNote};
 
 pub struct ApiHeaders {
     pub github_token: String,
@@ -78,29 +76,18 @@ pub async fn get_note(headers: ApiHeaders, Path(path): Path<String>) -> Result<J
     }
 }
 
-#[derive(Deserialize)]
-pub struct CreateNote {
-    path: String,
-    content: String,
-}
-
 pub async fn create_note(headers: ApiHeaders, Json(payload): Json<CreateNote>) -> impl IntoResponse {
     let note_service = match get_note_service(&headers) {
         Ok(service) => service,
         Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
     };
-    match note_service.create_note(&payload.path, &payload.content).await {
+    match note_service.create_note(&payload).await {
         Ok(_) => (StatusCode::CREATED, "Note created".to_string()),
         Err(NoteServiceError::NoteAlreadyExists) => {
             (StatusCode::CONFLICT, "Note with this path already exists".to_string())
         }
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
     }
-}
-
-#[derive(Deserialize)]
-pub struct UpdateNote {
-    content: String,
 }
 
 pub async fn update_note(
@@ -112,7 +99,7 @@ pub async fn update_note(
         Ok(service) => service,
         Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
     };
-    match note_service.update_note(&path, &payload.content).await {
+    match note_service.update_note(&path, &payload).await {
         Ok(_) => (StatusCode::OK, "Note updated".to_string()),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
     }

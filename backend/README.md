@@ -1,8 +1,6 @@
-# Note-Taking App Backend
+# Backend
 
 This is the backend for the Note-Taking App. It is a Rust-based application that uses a GitHub repository as its storage and serves an embedded SvelteKit frontend.
-
-For more information about the project as a whole, please see the [root-level README.md](../README.md).
 
 ## Architecture
 
@@ -62,13 +60,6 @@ All API endpoints require the following headers:
 
 -   **Endpoint:** `DELETE /api/notes/*path`
 -   **Description:** Deletes a specific note file.
-
-## Setup and Installation
-
-1.  **Run the application:**
-    ```bash
-    make run-backend
-    ```
 
 ### Environment Variables
 

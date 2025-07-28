@@ -1,6 +1,6 @@
+use log::info;
 use services::note_service::{NoteService, NoteServiceError};
 use std::sync::Mutex;
-use log::info;
 
 // --- State Management ---
 pub struct AppState {

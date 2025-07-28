@@ -1,6 +1,6 @@
-# Build Environment for AshNotes
+# Build Environment
 
-This container image contains all the necessary dependencies to build the Debian (`.deb`) package for the AshNotes Tauri application.
+This project uses a docker container image that contains all the necessary dependencies to build the Debian (`.deb`) package for the AshNotes Tauri application.
 
 It includes:
 - Rust & Cargo

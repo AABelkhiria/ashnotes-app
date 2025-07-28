@@ -1,6 +1,30 @@
 use super::state::AppState;
 use log::info;
-use services::note_service::{Note, NoteServiceError};
+use serde::Serialize;
+use services::note_service::{CreateNote, Note, NoteServiceError, UpdateNote};
+
+#[derive(Debug, Serialize)]
+pub enum TauriError {
+    NoteAlreadyExists,
+    GitHub(String),
+    Anyhow(String),
+}
+
+impl From<anyhow::Error> for TauriError {
+    fn from(err: anyhow::Error) -> Self {
+        TauriError::Anyhow(err.to_string())
+    }
+}
+
+impl From<NoteServiceError> for TauriError {
+    fn from(err: NoteServiceError) -> Self {
+        match err {
+            NoteServiceError::NoteAlreadyExists => TauriError::NoteAlreadyExists,
+            NoteServiceError::GitHub(s) => TauriError::GitHub(s),
+            NoteServiceError::Anyhow(s) => TauriError::Anyhow(s),
+        }
+    }
+}
 
 #[tauri::command]
 pub fn is_initialized(state: tauri::State<'_, AppState>) -> Result<bool, String> {
@@ -25,54 +49,43 @@ pub fn set_credentials(
 }
 
 #[tauri::command]
-pub async fn list_notes(state: tauri::State<'_, AppState>) -> Result<Vec<Note>, NoteServiceError> {
+pub async fn list_notes(state: tauri::State<'_, AppState>) -> Result<Vec<Note>, TauriError> {
     info!("Listing all notes");
     let service = state.get_service()?;
     info!("Fetching all notes from service");
-    service
-        .get_all_notes()
-        .await
-        .map_err(|e| NoteServiceError::Anyhow(e.to_string()))
+    service.get_all_notes().await.map_err(Into::into)
 }
 
 #[tauri::command]
-pub async fn get_note(state: tauri::State<'_, AppState>, path: String) -> Result<Option<Note>, NoteServiceError> {
+pub async fn get_note(state: tauri::State<'_, AppState>, path: String) -> Result<Option<Note>, TauriError> {
     info!("Getting note at path: {}", path);
     let service = state.get_service()?;
-    service
-        .get_note(&path)
-        .await
-        .map_err(|e| NoteServiceError::Anyhow(e.to_string()))
+    service.get_note(&path).await.map_err(Into::into)
 }
 
 #[tauri::command]
-pub async fn create_note(state: tauri::State<'_, AppState>, path: String, content: String) -> Result<(), NoteServiceError> {
-    info!("Creating note at path: {}", path);
+pub async fn create_note(state: tauri::State<'_, AppState>, payload: CreateNote) -> Result<(), TauriError> {
+    info!("Creating note at path: {}", payload.path);
     let service = state.get_service()?;
-    service
-        .create_note(&path, &content)
-        .await
-        .map_err(|e| NoteServiceError::Anyhow(e.to_string()))
+    service.create_note(&payload).await.map_err(Into::into)
 }
 
 #[tauri::command]
-pub async fn update_note(state: tauri::State<'_, AppState>, path: String, content: String) -> Result<(), NoteServiceError> {
+pub async fn update_note(
+    state: tauri::State<'_, AppState>,
+    path: String,
+    payload: UpdateNote,
+) -> Result<(), TauriError> {
     info!("Updating note at path: {}", path);
     let service = state.get_service()?;
-    service
-        .update_note(&path, &content)
-        .await
-        .map_err(|e| NoteServiceError::Anyhow(e.to_string()))
+    service.update_note(&path, &payload).await.map_err(Into::into)
 }
 
 #[tauri::command]
-pub async fn delete_note(state: tauri::State<'_, AppState>, path: String) -> Result<(), NoteServiceError> {
+pub async fn delete_note(state: tauri::State<'_, AppState>, path: String) -> Result<(), TauriError> {
     info!("Deleting note at path: {}", path);
     let service = state.get_service()?;
-    service
-        .delete_note(&path)
-        .await
-        .map_err(|e| NoteServiceError::Anyhow(e.to_string()))
+    service.delete_note(&path).await.map_err(Into::into)
 }
 
 #[tauri::command]

@@ -7,7 +7,11 @@ use tauri_plugin_log::TimezoneStrategy;
 
 mod commands;
 mod state;
+mod tray;
 
+use commands::{
+    create_note, delete_note, get_note, is_initialized, list_notes, log_message, set_credentials, update_note,
+};
 use state::AppState;
 
 fn main() {
@@ -38,6 +42,8 @@ fn main() {
                 .build(),
         )
         .setup(|_app| {
+            tray::create_tray(_app.handle())?;
+
             match std::env::current_exe() {
                 Ok(exe_path) => info!("Current executable path: {:?}", exe_path),
                 Err(e) => error!("Failed to get current executable path: {}", e),
@@ -51,14 +57,14 @@ fn main() {
         })
         .manage(app_state)
         .invoke_handler(tauri::generate_handler![
-            commands::set_credentials,
-            commands::is_initialized,
-            commands::list_notes,
-            commands::get_note,
-            commands::create_note,
-            commands::update_note,
-            commands::delete_note,
-            commands::log_message
+            set_credentials,
+            is_initialized,
+            list_notes,
+            get_note,
+            create_note,
+            update_note,
+            delete_note,
+            log_message
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
